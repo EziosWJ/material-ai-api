@@ -1003,9 +1003,120 @@ DELETE /api/system/oper-log/clear
 
 ---
 
-## 十、前端对接建议
+## 十、配置管理
 
-### 10.1 登录流程
+### 10.1 配置分页
+
+```
+GET /api/system/config/page?page=1&pageSize=10&configName=&configKey=&configType=&status=
+```
+
+**响应 data.records[]：**
+
+```json
+{
+  "id": 1,
+  "configName": "日志清空开关",
+  "configKey": "system.log-clear-enabled",
+  "configValue": "true",
+  "configType": "SYSTEM",
+  "valueType": "BOOLEAN",
+  "status": 1,
+  "isBuiltin": 1,
+  "remark": "控制日志清空接口是否可用",
+  "createTime": "2026-01-01 00:00:00",
+  "updateTime": "2026-01-01 00:00:00"
+}
+```
+
+### 10.2 配置详情
+
+```
+GET /api/system/config/{id}
+```
+
+### 10.3 按配置键查询（前端常用）
+
+```
+GET /api/system/config/key/{configKey}
+```
+
+**响应 data：**
+
+```json
+{
+  "configKey": "system.log-clear-enabled",
+  "configValue": "true",
+  "valueType": "BOOLEAN",
+  "configName": "日志清空开关"
+}
+```
+
+**前端对接要点：**
+- 只返回启用（`status=1`）且未删除的配置，不存在或已禁用返回 `404`
+- `valueType` 指示 `configValue` 的数据类型（`TEXT` / `NUMBER` / `BOOLEAN`），前端需自行转换
+- 前端可按 `configKey` 缓存配置值，减少重复请求
+
+### 10.4 新增配置
+
+```
+POST /api/system/config
+Body: {
+  "configName": "系统名称",
+  "configKey": "system.name",
+  "configValue": "后台管理系统",
+  "configType": "SYSTEM",
+  "valueType": "TEXT",
+  "status": 1,
+  "remark": "显示在登录页标题"
+}
+```
+
+**前端对接要点：**
+- `configName`、`configKey` 必填
+- `configKey` 全局唯一，重复返回 `400`
+- `configType` 默认 `SYSTEM`，`valueType` 默认 `TEXT`
+
+### 10.5 修改配置
+
+```
+PUT /api/system/config/{id}
+```
+
+**前端对接要点：**
+- `isBuiltin=1` 的内置配置项禁止修改
+
+### 10.6 删除配置
+
+```
+DELETE /api/system/config/{id}
+```
+
+**前端对接要点：**
+- `isBuiltin=1` 的内置配置项禁止删除
+
+### 10.7 批量删除
+
+```
+POST /api/system/config/batch-delete
+Body: {"ids": [1, 2, 3]}
+```
+
+**前端对接要点：**
+- 内置配置项会被后端静默跳过，非内置项正常删除
+
+### 10.8 启用/禁用
+
+```
+PATCH /api/system/config/{id}/status
+Body: {"status": 1}
+```
+
+---
+
+## 十一、前端对接建议
+
+### 11.1 登录流程
 
 ```
 1. 用户输入账号密码 → POST /api/auth/login
@@ -1016,13 +1127,13 @@ DELETE /api/system/oper-log/clear
 6. 401 响应时跳转登录页
 ```
 
-### 10.2 Token 刷新
+### 11.2 Token 刷新
 
 - 后端采用滑动续期，每次有效请求自动续期
 - 前端无需主动刷新 Token
 - 仅需处理 401 响应做登出跳转
 
-### 10.3 字典使用
+### 11.3 字典使用
 
 ```
 1. 启动时或首次需要时调用 GET /api/system/dict/{dictCode}/items
@@ -1031,7 +1142,7 @@ DELETE /api/system/oper-log/clear
 4. 列表展示时用 value→label 映射
 ```
 
-### 10.4 文件上传
+### 11.4 文件上传
 
 ```
 1. 上传文件 → POST /api/system/file/upload
@@ -1040,7 +1151,7 @@ DELETE /api/system/oper-log/clear
 4. 展示时直接使用 accessUrl 作为 img src 或下载链接
 ```
 
-### 10.5 内置数据保护
+### 11.5 内置数据保护
 
 前端应对 `isBuiltin=1` 的数据做 UI 限制：
 - 内置用户：禁止删除
@@ -1048,8 +1159,9 @@ DELETE /api/system/oper-log/clear
 - 内置菜单：禁止删除
 - 内置部门：禁止删除、禁止修改编码
 - 内置字典类型：禁止删除、禁止修改编码
+- 内置配置项：禁止修改、禁止删除
 
-### 10.6 树形数据
+### 11.6 树形数据
 
 菜单和部门均为树形结构，统一用 `children` 字段。前端可使用通用树组件处理：
 - 菜单选择器（角色分配菜单）
@@ -1057,17 +1169,17 @@ DELETE /api/system/oper-log/clear
 - 部门树管理
 - 菜单树管理
 
-### 10.7 CORS
+### 11.7 CORS
 
 开发环境前端地址：`http://localhost:5173`，已配置 CORS 允许跨域。
 
-### 10.8 API 文档
+### 11.8 API 文档
 
 开发环境可通过 Knife4j 查看完整 API 文档，地址通常为：`http://localhost:8080/doc.html`
 
 ---
 
-## 十一、初始化账号
+## 十二、初始化账号
 
 | 账号     | 密码      | 说明         |
 | -------- | --------- | ------------ |
@@ -1075,7 +1187,7 @@ DELETE /api/system/oper-log/clear
 
 ---
 
-## 十二、接口速查表
+## 十三、接口速查表
 
 | 模块   | 方法   | 路径                                  | 说明             |
 | ------ | ------ | ------------------------------------- | ---------------- |
@@ -1150,3 +1262,11 @@ DELETE /api/system/oper-log/clear
 | 日志   | GET    | /api/system/oper-log/page             | 操作日志分页     |
 | 日志   | GET    | /api/system/oper-log/{id}             | 操作日志详情     |
 | 日志   | DELETE | /api/system/oper-log/clear            | 清空操作日志     |
+| 配置   | GET    | /api/system/config/page               | 配置分页         |
+| 配置   | GET    | /api/system/config/{id}               | 配置详情         |
+| 配置   | GET    | /api/system/config/key/{configKey}    | 按配置键查询     |
+| 配置   | POST   | /api/system/config                    | 新增配置         |
+| 配置   | PUT    | /api/system/config/{id}               | 修改配置         |
+| 配置   | DELETE | /api/system/config/{id}               | 删除配置         |
+| 配置   | POST   | /api/system/config/batch-delete       | 批量删除         |
+| 配置   | PATCH  | /api/system/config/{id}/status        | 启用/禁用        |

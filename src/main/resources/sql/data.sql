@@ -20,7 +20,8 @@ VALUES
 (7, 0, '日志管理', 'DIR', '/log', NULL, 'ListChecks', 'system:log', 2, 1, 1, 1),
 (8, 7, '登录日志', 'MENU', '/log/login', 'system/log/login-log', 'LogIn', 'system:login-log', 1, 1, 1, 1),
 (9, 7, '操作日志', 'MENU', '/log/oper', 'system/log/oper-log', 'ClipboardList', 'system:oper-log', 2, 1, 1, 1),
-(10, 0, '文件管理', 'MENU', '/file', 'system/file/index', 'File', 'system:file', 3, 1, 1, 1);
+(10, 0, '文件管理', 'MENU', '/file', 'system/file/index', 'File', 'system:file', 3, 1, 1, 1),
+(11, 1, '配置管理', 'MENU', '/system/config', 'system/config/index', 'Settings2', 'system:config', 6, 1, 1, 1);
 
 INSERT INTO sys_role_menu (role_id, menu_id)
 SELECT 1, id FROM sys_menu WHERE deleted = 0;
@@ -57,3 +58,20 @@ VALUES
 (7, '头像', 'avatar', 1, NULL),
 (7, '导入', 'import', 2, NULL),
 (7, '附件', 'attachment', 3, NULL);
+
+INSERT INTO sys_dict_type (id, dict_name, dict_code, status, sort_order, is_builtin, remark)
+VALUES
+(8, '配置类型', 'CONFIG_TYPE', 1, 8, 1, '系统配置归属类型'),
+(9, '配置值类型', 'CONFIG_VALUE_TYPE', 1, 9, 1, '配置值数据类型');
+
+INSERT INTO sys_dict_data (dict_type_id, dict_label, dict_value, sort_order, remark)
+VALUES
+(8, '系统配置', 'SYSTEM', 1, NULL),
+(8, '自定义配置', 'CUSTOM', 2, NULL),
+(9, '文本', 'TEXT', 1, NULL),
+(9, '数字', 'NUMBER', 2, NULL),
+(9, '布尔', 'BOOLEAN', 3, NULL);
+
+INSERT INTO sys_config (id, config_name, config_key, config_value, config_type, value_type, status, is_builtin, remark)
+VALUES
+(1, '日志清空开关', 'system.log-clear-enabled', 'true', 'SYSTEM', 'BOOLEAN', 1, 1, '控制日志清空接口是否可用，dev 默认开启，prod 默认关闭');

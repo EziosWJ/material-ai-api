@@ -208,3 +208,23 @@ CREATE TABLE IF NOT EXISTS sys_file (
     KEY idx_deleted_status (deleted, status),
     KEY idx_create_time (create_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS sys_config (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    config_name VARCHAR(100) NOT NULL,
+    config_key VARCHAR(100) NOT NULL,
+    config_value VARCHAR(500) NULL,
+    config_type VARCHAR(20) NOT NULL DEFAULT 'SYSTEM',
+    value_type VARCHAR(20) NOT NULL DEFAULT 'TEXT',
+    status TINYINT NOT NULL DEFAULT 1,
+    is_builtin TINYINT NOT NULL DEFAULT 0,
+    remark VARCHAR(500) NULL,
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    create_by BIGINT NULL,
+    update_by BIGINT NULL,
+    deleted TINYINT NOT NULL DEFAULT 0,
+    UNIQUE KEY uk_config_key (config_key),
+    KEY idx_config_type (config_type),
+    KEY idx_deleted_status (deleted, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
