@@ -86,7 +86,7 @@ public class DeptController {
 
     @OperLog(title = "部门管理", type = "DELETE")
     @Operation(summary = "批量删除部门")
-    @DeleteMapping("/batch")
+    @PostMapping("/batch-delete")
     public ApiResponse<Void> deleteBatch(@Valid @RequestBody BatchIdsRequest request) {
         deptService.deleteBatch(request);
         return ApiResponse.success();

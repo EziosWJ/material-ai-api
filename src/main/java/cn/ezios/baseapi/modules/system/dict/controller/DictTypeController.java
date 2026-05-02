@@ -73,7 +73,7 @@ public class DictTypeController {
 
     @OperLog(title = "字典类型", type = "DELETE")
     @Operation(summary = "批量删除字典类型")
-    @DeleteMapping("/batch")
+    @PostMapping("/batch-delete")
     public ApiResponse<Void> deleteBatch(@Valid @RequestBody BatchIdsRequest request) {
         dictService.deleteTypeBatch(request);
         return ApiResponse.success();

@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -71,7 +72,7 @@ public class DictDataController {
 
     @OperLog(title = "字典数据", type = "DELETE")
     @Operation(summary = "批量删除字典数据")
-    @DeleteMapping("/batch")
+    @PostMapping("/batch-delete")
     public ApiResponse<Void> deleteBatch(@Valid @RequestBody BatchIdsRequest request) {
         dictService.deleteDataBatch(request);
         return ApiResponse.success();

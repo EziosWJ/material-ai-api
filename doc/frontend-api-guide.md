@@ -272,7 +272,7 @@ DELETE /api/system/user/{id}
 ### 3.6 批量删除
 
 ```
-DELETE /api/system/user/batch
+POST /api/system/user/batch-delete
 Body: {"ids": [1, 2, 3]}
 ```
 
@@ -348,7 +348,20 @@ GET /api/system/role/page?page=1&pageSize=10&roleName=&roleCode=&status=
 }
 ```
 
-### 4.2 角色详情
+### 4.2 角色选择列表（下拉用）
+
+```
+GET /api/system/role/options
+```
+
+**响应 data：** 只返回启用角色的简化列表，字段同角色分页记录（不含 `menuIds`）。
+
+**前端对接要点：**
+- 用户分配角色时的下拉选择使用此接口
+- 只返回 `status=1` 的启用角色
+- 按 `sortOrder` 排序
+
+### 4.3 角色详情
 
 ```
 GET /api/system/role/{id}
@@ -356,14 +369,14 @@ GET /api/system/role/{id}
 
 **响应 data：** 包含角色基础信息和已分配菜单 ID 列表（`menuIds`），用于编辑回显
 
-### 4.3 新增角色
+### 4.4 新增角色
 
 ```
 POST /api/system/role
 Body: {"roleName": "测试角色", "roleCode": "test", "status": 1, "sortOrder": 0, "remark": ""}
 ```
 
-### 4.4 修改角色
+### 4.5 修改角色
 
 ```
 PUT /api/system/role/{id}
@@ -372,7 +385,7 @@ PUT /api/system/role/{id}
 **前端对接要点：**
 - `isBuiltin=1` 的内置角色禁止修改 `roleCode`
 
-### 4.5 删除角色
+### 4.6 删除角色
 
 ```
 DELETE /api/system/role/{id}
@@ -382,21 +395,21 @@ DELETE /api/system/role/{id}
 - `isBuiltin=1` 的内置角色禁止删除
 - 已绑定用户的角色禁止删除
 
-### 4.6 批量删除
+### 4.7 批量删除
 
 ```
-DELETE /api/system/role/batch
+POST /api/system/role/batch-delete
 Body: {"ids": [1, 2, 3]}
 ```
 
-### 4.7 启用/禁用
+### 4.8 启用/禁用
 
 ```
 PATCH /api/system/role/{id}/status
 Body: {"status": 1}
 ```
 
-### 4.8 分配菜单
+### 4.9 分配菜单
 
 ```
 PUT /api/system/role/{id}/menus
@@ -431,6 +444,34 @@ GET /api/system/menu/page?page=1&pageSize=10&menuName=&menuType=&status=&visible
 ```
 GET /api/system/menu/{id}
 ```
+
+**响应 data：**
+
+```json
+{
+  "id": 1,
+  "parentId": 0,
+  "menuName": "系统管理",
+  "menuType": "DIR",
+  "path": "/system",
+  "component": null,
+  "externalUrl": null,
+  "icon": "setting",
+  "permissionCode": null,
+  "sortOrder": 1,
+  "visible": 1,
+  "status": 1,
+  "isBuiltin": 1,
+  "remark": "",
+  "createTime": "2026-01-01 00:00:00",
+  "updateTime": "2026-01-01 00:00:00"
+}
+```
+
+**前端对接要点：**
+- 外链菜单（`menuType=LINK`）使用 `externalUrl` 字段
+- `isBuiltin=1` 的内置菜单禁止删除
+- `visible=1` 才显示在菜单栏
 
 ### 5.4 新增菜单
 
@@ -485,7 +526,7 @@ DELETE /api/system/menu/{id}
 ### 5.7 批量删除
 
 ```
-DELETE /api/system/menu/batch
+POST /api/system/menu/batch-delete
 Body: {"ids": [1, 2, 3]}
 ```
 
@@ -572,7 +613,7 @@ DELETE /api/system/dept/{id}
 ### 6.8 批量删除
 
 ```
-DELETE /api/system/dept/batch
+POST /api/system/dept/batch-delete
 Body: {"ids": [1, 2, 3]}
 ```
 
@@ -643,7 +684,7 @@ DELETE /api/system/dict-type/{id}
 ### 7.6 字典类型批量删除
 
 ```
-DELETE /api/system/dict-type/batch
+POST /api/system/dict-type/batch-delete
 Body: {"ids": [1, 2, 3]}
 ```
 
@@ -702,7 +743,7 @@ DELETE /api/system/dict-data/{id}
 ### 7.13 字典数据批量删除
 
 ```
-DELETE /api/system/dict-data/batch
+POST /api/system/dict-data/batch-delete
 Body: {"ids": [1, 2, 3]}
 ```
 
@@ -779,11 +820,31 @@ Content-Type: multipart/form-data
 GET /api/system/file/page?page=1&pageSize=10&originalName=&businessModule=&mimeType=&status=
 ```
 
+**响应 data.records[]：**
+
+```json
+{
+  "id": 1,
+  "originalName": "avatar.png",
+  "storageName": "20260502_abc123.png",
+  "extension": "png",
+  "mimeType": "image/png",
+  "fileSize": 102400,
+  "accessUrl": "/api/system/file/1/view",
+  "businessModule": "user",
+  "status": 1,
+  "remark": "",
+  "createTime": "2026-05-02 10:00:00"
+}
+```
+
 ### 8.4 文件详情
 
 ```
 GET /api/system/file/{id}
 ```
+
+**响应 data：** 字段同文件分页记录。
 
 ### 8.5 修改文件信息
 
@@ -801,7 +862,7 @@ DELETE /api/system/file/{id}
 ### 8.7 批量删除
 
 ```
-DELETE /api/system/file/batch
+POST /api/system/file/batch-delete
 Body: {"ids": [1, 2, 3]}
 ```
 
@@ -903,7 +964,33 @@ GET /api/system/oper-log/page?page=1&pageSize=10&moduleName=&operationType=&oper
 GET /api/system/oper-log/{id}
 ```
 
-**响应 data：** 包含请求参数摘要和响应结果摘要（敏感字段已脱敏）
+**响应 data：**
+
+```json
+{
+  "id": 1,
+  "moduleName": "用户管理",
+  "operationType": "CREATE",
+  "requestMethod": "POST",
+  "requestUrl": "/api/system/user",
+  "operatorId": 1,
+  "operatorName": "admin",
+  "operatorIp": "127.0.0.1",
+  "operatorLocation": "",
+  "requestParams": "{\"username\":\"zhangsan\"}",
+  "responseResult": "{\"code\":200,\"message\":\"success\"}",
+  "costTime": 120,
+  "operationStatus": "SUCCESS",
+  "errorMessage": null,
+  "operationTime": "2026-05-02 10:00:00",
+  "createTime": "2026-05-02 10:00:00"
+}
+```
+
+**前端对接要点：**
+- 请求参数摘要字段名为 `requestParams`
+- 响应结果摘要字段名为 `responseResult`
+- 敏感字段（如密码）已脱敏
 
 ### 9.6 清空操作日志
 
@@ -1001,18 +1088,19 @@ DELETE /api/system/oper-log/clear
 | 用户   | POST   | /api/system/user                      | 新增用户         |
 | 用户   | PUT    | /api/system/user/{id}                 | 修改用户         |
 | 用户   | DELETE | /api/system/user/{id}                 | 删除用户         |
-| 用户   | DELETE | /api/system/user/batch                | 批量删除         |
+| 用户   | POST   | /api/system/user/batch-delete          | 批量删除         |
 | 用户   | PATCH  | /api/system/user/{id}/status          | 启用/禁用        |
 | 用户   | PUT    | /api/system/user/{id}/roles           | 分配角色         |
 | 用户   | PUT    | /api/system/user/{id}/reset-password  | 重置密码         |
 | 用户   | PUT    | /api/system/user/me/password          | 修改密码         |
 | 用户   | PUT    | /api/system/user/me/avatar            | 修改头像         |
 | 角色   | GET    | /api/system/role/page                 | 角色分页         |
+| 角色   | GET    | /api/system/role/options              | 角色选择列表     |
 | 角色   | GET    | /api/system/role/{id}                 | 角色详情         |
 | 角色   | POST   | /api/system/role                      | 新增角色         |
 | 角色   | PUT    | /api/system/role/{id}                 | 修改角色         |
 | 角色   | DELETE | /api/system/role/{id}                 | 删除角色         |
-| 角色   | DELETE | /api/system/role/batch                | 批量删除         |
+| 角色   | POST   | /api/system/role/batch-delete          | 批量删除         |
 | 角色   | PATCH  | /api/system/role/{id}/status          | 启用/禁用        |
 | 角色   | PUT    | /api/system/role/{id}/menus           | 分配菜单         |
 | 菜单   | GET    | /api/system/menu/tree                 | 菜单树           |
@@ -1021,7 +1109,7 @@ DELETE /api/system/oper-log/clear
 | 菜单   | POST   | /api/system/menu                      | 新增菜单         |
 | 菜单   | PUT    | /api/system/menu/{id}                 | 修改菜单         |
 | 菜单   | DELETE | /api/system/menu/{id}                 | 删除菜单         |
-| 菜单   | DELETE | /api/system/menu/batch                | 批量删除         |
+| 菜单   | POST   | /api/system/menu/batch-delete          | 批量删除         |
 | 菜单   | PATCH  | /api/system/menu/{id}/status          | 启用/禁用        |
 | 部门   | GET    | /api/system/dept/tree                 | 部门树           |
 | 部门   | GET    | /api/system/dept/page                 | 部门分页         |
@@ -1030,21 +1118,21 @@ DELETE /api/system/oper-log/clear
 | 部门   | POST   | /api/system/dept                      | 新增部门         |
 | 部门   | PUT    | /api/system/dept/{id}                 | 修改部门         |
 | 部门   | DELETE | /api/system/dept/{id}                 | 删除部门         |
-| 部门   | DELETE | /api/system/dept/batch                | 批量删除         |
+| 部门   | POST   | /api/system/dept/batch-delete          | 批量删除         |
 | 部门   | PATCH  | /api/system/dept/{id}/status          | 启用/禁用        |
 | 字典   | GET    | /api/system/dict-type/page            | 字典类型分页     |
 | 字典   | GET    | /api/system/dict-type/{id}            | 字典类型详情     |
 | 字典   | POST   | /api/system/dict-type                 | 新增字典类型     |
 | 字典   | PUT    | /api/system/dict-type/{id}            | 修改字典类型     |
 | 字典   | DELETE | /api/system/dict-type/{id}            | 删除字典类型     |
-| 字典   | DELETE | /api/system/dict-type/batch           | 字典类型批量删除 |
+| 字典   | POST   | /api/system/dict-type/batch-delete     | 字典类型批量删除 |
 | 字典   | PATCH  | /api/system/dict-type/{id}/status     | 字典类型启禁用   |
 | 字典   | GET    | /api/system/dict-data/page            | 字典数据分页     |
 | 字典   | GET    | /api/system/dict-data/{id}            | 字典数据详情     |
 | 字典   | POST   | /api/system/dict-data                 | 新增字典数据     |
 | 字典   | PUT    | /api/system/dict-data/{id}            | 修改字典数据     |
 | 字典   | DELETE | /api/system/dict-data/{id}            | 删除字典数据     |
-| 字典   | DELETE | /api/system/dict-data/batch           | 字典数据批量删除 |
+| 字典   | POST   | /api/system/dict-data/batch-delete     | 字典数据批量删除 |
 | 字典   | GET    | /api/system/dict/{dictCode}/items     | 字典项查询       |
 | 文件   | POST   | /api/system/file/upload               | 单文件上传       |
 | 文件   | POST   | /api/system/file/upload-batch         | 批量文件上传     |
@@ -1052,7 +1140,7 @@ DELETE /api/system/oper-log/clear
 | 文件   | GET    | /api/system/file/{id}                 | 文件详情         |
 | 文件   | PUT    | /api/system/file/{id}                 | 修改文件信息     |
 | 文件   | DELETE | /api/system/file/{id}                 | 删除文件         |
-| 文件   | DELETE | /api/system/file/batch                | 批量删除         |
+| 文件   | POST   | /api/system/file/batch-delete          | 批量删除         |
 | 文件   | PATCH  | /api/system/file/{id}/status          | 文件启禁用       |
 | 文件   | GET    | /api/system/file/{id}/download        | 文件下载         |
 | 文件   | GET    | /api/system/file/{id}/view            | 文件预览         |

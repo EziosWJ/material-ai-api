@@ -80,7 +80,7 @@ public class MenuController {
 
     @OperLog(title = "菜单管理", type = "DELETE")
     @Operation(summary = "批量删除菜单")
-    @DeleteMapping("/batch")
+    @PostMapping("/batch-delete")
     public ApiResponse<Void> deleteBatch(@Valid @RequestBody BatchIdsRequest request) {
         menuService.deleteBatch(request);
         return ApiResponse.success();

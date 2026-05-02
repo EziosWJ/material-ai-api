@@ -78,7 +78,7 @@ public class UserController {
 
     @OperLog(title = "用户管理", type = "DELETE")
     @Operation(summary = "批量删除用户")
-    @DeleteMapping("/batch")
+    @PostMapping("/batch-delete")
     public ApiResponse<Void> deleteBatch(@Valid @RequestBody BatchIdsRequest request) {
         userService.deleteBatch(request);
         return ApiResponse.success();

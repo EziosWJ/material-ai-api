@@ -13,6 +13,7 @@ import cn.ezios.baseapi.modules.system.role.vo.RoleVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,6 +41,12 @@ public class RoleController {
     @GetMapping("/page")
     public ApiResponse<PageResult<RoleVO>> page(@Valid RolePageQuery query) {
         return ApiResponse.success(roleService.page(query));
+    }
+
+    @Operation(summary = "角色选择列表")
+    @GetMapping("/options")
+    public ApiResponse<List<RoleVO>> options() {
+        return ApiResponse.success(roleService.options());
     }
 
     @Operation(summary = "角色详情")
@@ -74,7 +81,7 @@ public class RoleController {
 
     @OperLog(title = "角色管理", type = "DELETE")
     @Operation(summary = "批量删除角色")
-    @DeleteMapping("/batch")
+    @PostMapping("/batch-delete")
     public ApiResponse<Void> deleteBatch(@Valid @RequestBody BatchIdsRequest request) {
         roleService.deleteBatch(request);
         return ApiResponse.success();

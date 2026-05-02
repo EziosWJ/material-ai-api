@@ -7,8 +7,6 @@ import cn.ezios.baseapi.modules.system.file.dto.FilePageQuery;
 import cn.ezios.baseapi.modules.system.file.dto.FileUpdateRequest;
 import cn.ezios.baseapi.modules.system.file.vo.FileVO;
 import java.util.List;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface FileService {
@@ -29,7 +27,7 @@ public interface FileService {
 
     void updateStatus(Long id, StatusUpdateRequest request);
 
-    ResponseEntity<Resource> download(Long id);
+    FileResource download(Long id);
 
-    ResponseEntity<Resource> view(Long id);
+    FileResource view(Long id);
 }

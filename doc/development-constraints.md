@@ -3,7 +3,7 @@
 - 后台接口采用 REST 风格，资源名使用单数，不使用复数。
 - 分页接口统一追加 `/page`。
 - 查询使用 `GET`，新增使用 `POST`，修改使用 `PUT`，删除使用 `DELETE`，局部状态变更使用 `PATCH`。
-- 批量删除统一使用 `DELETE /batch`，请求体为 JSON：`{"ids":[]}`。
+- 批量删除统一使用 `POST /batch-delete`，请求体为 JSON：`{"ids":[]}`（使用 POST 而非 DELETE 携带 body，避免代理兼容性问题）。
 - 资源关系分配类接口使用 `PUT`，例如 `PUT /api/system/user/{id}/roles`。
 - 状态修改类接口使用 `PATCH`，例如 `PATCH /api/system/user/{id}/status`。
 ## 请求参数

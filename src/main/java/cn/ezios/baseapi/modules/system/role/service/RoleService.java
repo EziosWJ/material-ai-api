@@ -7,6 +7,7 @@ import cn.ezios.baseapi.modules.system.role.dto.RoleMenuRequest;
 import cn.ezios.baseapi.modules.system.role.dto.RolePageQuery;
 import cn.ezios.baseapi.modules.system.role.dto.RoleSaveRequest;
 import cn.ezios.baseapi.modules.system.role.vo.RoleVO;
+import java.util.List;
 
 public interface RoleService {
 
@@ -25,4 +26,6 @@ public interface RoleService {
     void updateStatus(Long id, StatusUpdateRequest request);
 
     void assignMenus(Long id, RoleMenuRequest request);
+
+    List<RoleVO> options();
 }

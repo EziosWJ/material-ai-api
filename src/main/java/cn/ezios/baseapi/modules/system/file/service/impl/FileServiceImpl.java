@@ -12,14 +12,13 @@ import cn.ezios.baseapi.modules.system.file.dto.FilePageQuery;
 import cn.ezios.baseapi.modules.system.file.dto.FileUpdateRequest;
 import cn.ezios.baseapi.modules.system.file.entity.SysFile;
 import cn.ezios.baseapi.modules.system.file.mapper.SysFileMapper;
+import cn.ezios.baseapi.modules.system.file.service.FileResource;
 import cn.ezios.baseapi.modules.system.file.service.FileService;
 import cn.ezios.baseapi.modules.system.file.vo.FileVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -30,10 +29,6 @@ import java.util.UUID;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -158,27 +153,15 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public ResponseEntity<Resource> download(Long id) {
+    public FileResource download(Long id) {
         SysFile file = requireFile(id);
-        Resource resource = resource(file);
-        String filename = URLEncoder.encode(file.getOriginalName(), StandardCharsets.UTF_8).replace("+", "%20");
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filename)
-                .body(resource);
+        return new FileResource(loadResource(file), file.getOriginalName(), file.getMimeType());
     }
 
     @Override
-    public ResponseEntity<Resource> view(Long id) {
+    public FileResource view(Long id) {
         SysFile file = requireFile(id);
-        MediaType mediaType = StringUtils.hasText(file.getMimeType())
-                ? MediaType.parseMediaType(file.getMimeType())
-                : MediaType.APPLICATION_OCTET_STREAM;
-        return ResponseEntity.ok()
-                .contentType(mediaType)
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        ContentDisposition.inline().filename(file.getOriginalName(), StandardCharsets.UTF_8).build().toString())
-                .body(resource(file));
+        return new FileResource(loadResource(file), file.getOriginalName(), file.getMimeType());
     }
 
     private SysFile requireFile(Long id) {
@@ -189,7 +172,7 @@ public class FileServiceImpl implements FileService {
         return file;
     }
 
-    private Resource resource(SysFile file) {
+    private Resource loadResource(SysFile file) {
         try {
             Path path = Path.of(systemProperties.getFile().getUploadRoot()).resolve(file.getStoragePath()).normalize();
             Resource resource = new UrlResource(path.toUri());

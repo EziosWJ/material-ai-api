@@ -167,6 +167,17 @@ public class RoleServiceImpl implements RoleService {
         return vo;
     }
 
+    @Override
+    public List<RoleVO> options() {
+        return roleMapper.selectList(new LambdaQueryWrapper<SysRole>()
+                        .eq(SysRole::getStatus, STATUS_ENABLED)
+                        .orderByAsc(SysRole::getSortOrder)
+                        .orderByAsc(SysRole::getId))
+                .stream()
+                .map(this::toVO)
+                .toList();
+    }
+
     private List<Long> safeIds(List<Long> ids) {
         return ids == null ? Collections.emptyList() : ids.stream().distinct().toList();
     }

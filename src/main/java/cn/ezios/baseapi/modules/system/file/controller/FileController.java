@@ -7,14 +7,21 @@ import cn.ezios.baseapi.common.model.StatusUpdateRequest;
 import cn.ezios.baseapi.framework.log.OperLog;
 import cn.ezios.baseapi.modules.system.file.dto.FilePageQuery;
 import cn.ezios.baseapi.modules.system.file.dto.FileUpdateRequest;
+import cn.ezios.baseapi.modules.system.file.service.FileResource;
 import cn.ezios.baseapi.modules.system.file.service.FileService;
 import cn.ezios.baseapi.modules.system.file.vo.FileVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -88,7 +95,7 @@ public class FileController {
 
     @OperLog(title = "文件管理", type = "DELETE")
     @Operation(summary = "批量删除文件")
-    @DeleteMapping("/batch")
+    @PostMapping("/batch-delete")
     public ApiResponse<Void> deleteBatch(@Valid @RequestBody BatchIdsRequest request) {
         fileService.deleteBatch(request);
         return ApiResponse.success();
@@ -105,12 +112,25 @@ public class FileController {
     @Operation(summary = "下载文件")
     @GetMapping("/{id}/download")
     public ResponseEntity<Resource> download(@PathVariable Long id) {
-        return fileService.download(id);
+        FileResource fr = fileService.download(id);
+        String filename = URLEncoder.encode(fr.originalName(), StandardCharsets.UTF_8).replace("+", "%20");
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filename)
+                .body(fr.resource());
     }
 
     @Operation(summary = "预览文件")
     @GetMapping("/{id}/view")
     public ResponseEntity<Resource> view(@PathVariable Long id) {
-        return fileService.view(id);
+        FileResource fr = fileService.view(id);
+        MediaType mediaType = StringUtils.hasText(fr.mimeType())
+                ? MediaType.parseMediaType(fr.mimeType())
+                : MediaType.APPLICATION_OCTET_STREAM;
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.inline().filename(fr.originalName(), StandardCharsets.UTF_8).build().toString())
+                .body(fr.resource());
     }
 }
