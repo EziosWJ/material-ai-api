@@ -84,6 +84,10 @@ GET /api/system/config/{id}
 GET /api/system/config/key/{configKey}
 ```
 
+```
+GET /api/system/config/key/{configKey}
+```
+
 **响应 data：**
 
 ```json
@@ -98,6 +102,7 @@ GET /api/system/config/key/{configKey}
 **前端对接要点：**
 - 只返回启用（`status=1`）且未删除的配置
 - 配置不存在或已禁用返回 `404`
+- `configKey` 作为路径参数，如包含 `/` 等特殊字符，前端需使用 `encodeURIComponent(configKey)` 编码
 - 前端可按 `configKey` 缓存配置值，减少重复请求
 - `valueType` 指示 `configValue` 的数据类型，前端需自行转换：
   - `TEXT`：直接使用字符串
@@ -140,6 +145,7 @@ POST /api/system/config
 - `configKey` 重复时返回 `400`，提示"配置键已存在"
 - 包括已逻辑删除的同 key 配置也会触发此错误（数据库唯一索引层面约束）
 - 新增的配置默认为普通配置（`isBuiltin=0`）
+- 后端不对 `configValue` 与 `valueType` 做匹配校验，即 `valueType=NUMBER` 时也可以存入非数字字符串；前端应自行在表单提交前校验
 
 ### 2.5 修改配置
 
@@ -152,6 +158,8 @@ PUT /api/system/config/{id}
 **前端对接要点：**
 - `isBuiltin=1` 的内置配置项禁止修改，返回 `400`，提示"内置配置项禁止修改"
 - `configKey` 重复时返回 `400`，提示"配置键已存在"
+- 修改时 `configKey` 必须提交（后端会做唯一性校验），前端可将输入框置灰但仍需在请求体中携带原值
+- `valueType` 校验规则同新增，后端不校验 `configValue` 与 `valueType` 的匹配性
 
 ### 2.6 删除配置
 
@@ -180,6 +188,10 @@ PATCH /api/system/config/{id}/status
 Body: {"status": 1}
 ```
 
+**前端对接要点：**
+- 当前后端未对内置配置项（`isBuiltin=1`）限制状态修改，内置配置也可启用/禁用
+- 前端建议在 UI 上对内置配置项隐藏或禁用状态开关，避免误操作
+
 ---
 
 ## 三、前端对接建议
@@ -207,6 +219,8 @@ Body: {"status": 1}
   - `TEXT`：文本输入框
   - `NUMBER`：数字输入框
   - `BOOLEAN`：开关或单选框
+- 后端不校验 `configValue` 是否符合 `valueType`（例如 `valueType=NUMBER` 时后端允许存入非数字字符串），**前端应在提交前自行校验**
+- `BOOLEAN` 类型的 `configValue` 以字符串 `"true"` / `"false"` 存储，后端不接受 `"1"` / `"0"` 或布尔值
 
 ### 3.4 表单建议
 
