@@ -12,15 +12,15 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(prefix = "springdoc.api-docs", name = "enabled", havingValue = "true")
 public class OpenApiConfig {
 
-    private static final Map<String, String> GROUP_PATHS = Map.of(
-            "认证", "/api/auth/**",
-            "用户", "/api/system/user/**",
-            "角色", "/api/system/role/**",
-            "菜单", "/api/system/menu/**",
-            "部门", "/api/system/dept/**",
-            "字典", "/api/system/dict/**",
-            "日志", "/api/system/*-log/**",
-            "文件", "/api/system/file/**"
+    private static final Map<String, String[]> GROUP_PATHS = Map.of(
+            "认证", new String[]{"/api/auth/**"},
+            "用户", new String[]{"/api/system/user/**"},
+            "角色", new String[]{"/api/system/role/**"},
+            "菜单", new String[]{"/api/system/menu/**"},
+            "部门", new String[]{"/api/system/dept/**"},
+            "字典", new String[]{"/api/system/dict/**", "/api/system/dict-type/**", "/api/system/dict-data/**"},
+            "日志", new String[]{"/api/system/*-log/**"},
+            "文件", new String[]{"/api/system/file/**"}
     );
 
     @Bean
