@@ -81,6 +81,7 @@ public class DeptServiceImpl implements DeptService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void create(DeptSaveRequest request) {
         ensureDeptCodeUnique(request.getDeptCode(), null);
         SysDept dept = new SysDept();
@@ -92,6 +93,7 @@ public class DeptServiceImpl implements DeptService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(Long id, DeptSaveRequest request) {
         SysDept existing = requireDept(id);
         if (Objects.equals(existing.getIsBuiltin(), BUILTIN)
@@ -130,6 +132,7 @@ public class DeptServiceImpl implements DeptService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, StatusUpdateRequest request) {
         requireDept(id);
         SysDept dept = new SysDept();

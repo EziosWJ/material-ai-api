@@ -68,6 +68,7 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void create(ConfigSaveRequest request) {
         ensureConfigKeyUnique(request.getConfigKey(), null);
         SysConfig config = new SysConfig();
@@ -84,6 +85,7 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(Long id, ConfigSaveRequest request) {
         SysConfig existing = requireConfig(id);
         if (Objects.equals(existing.getIsBuiltin(), BUILTIN)) {
@@ -119,6 +121,7 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, StatusUpdateRequest request) {
         requireConfig(id);
         SysConfig config = new SysConfig();

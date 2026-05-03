@@ -5,6 +5,7 @@ import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.ezios.baseapi.common.enums.ResponseCode;
 import cn.ezios.baseapi.common.exception.BusinessException;
+import cn.ezios.baseapi.common.util.IpUtil;
 import cn.ezios.baseapi.modules.auth.dto.LoginRequest;
 import cn.ezios.baseapi.modules.auth.service.AuthService;
 import cn.ezios.baseapi.modules.auth.vo.AuthDeptVO;
@@ -42,7 +43,6 @@ public class AuthServiceImpl implements AuthService {
     private static final long ROOT_PARENT_ID = 0L;
     private static final String LOGIN_SUCCESS = "SUCCESS";
     private static final String LOGIN_FAIL = "FAIL";
-    private static final String UNKNOWN = "unknown";
 
     private final SysUserMapper userMapper;
     private final SysRoleMapper roleMapper;
@@ -67,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginTokenVO login(LoginRequest request, HttpServletRequest servletRequest) {
-        String loginIp = getClientIp(servletRequest);
+        String loginIp = IpUtil.getClientIp(servletRequest);
         SysUser user = userMapper.selectOne(new LambdaQueryWrapper<SysUser>()
                 .eq(SysUser::getUsername, request.getUsername())
                 .last("LIMIT 1"));
@@ -233,14 +233,4 @@ public class AuthServiceImpl implements AuthService {
         return tokenPrefix + " " + tokenValue;
     }
 
-    private String getClientIp(HttpServletRequest request) {
-        String[] headerNames = {"X-Forwarded-For", "X-Real-IP", "Proxy-Client-IP", "WL-Proxy-Client-IP"};
-        for (String headerName : headerNames) {
-            String value = request.getHeader(headerName);
-            if (StringUtils.hasText(value) && !UNKNOWN.equalsIgnoreCase(value)) {
-                return value.split(",")[0].trim();
-            }
-        }
-        return request.getRemoteAddr();
-    }
 }

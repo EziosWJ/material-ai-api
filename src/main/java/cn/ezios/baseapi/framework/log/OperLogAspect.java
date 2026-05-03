@@ -1,6 +1,7 @@
 package cn.ezios.baseapi.framework.log;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.ezios.baseapi.common.util.IpUtil;
 import cn.ezios.baseapi.modules.system.log.entity.SysOperLog;
 import cn.ezios.baseapi.modules.system.log.mapper.SysOperLogMapper;
 import cn.ezios.baseapi.modules.system.user.entity.SysUser;
@@ -14,6 +15,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -24,9 +27,9 @@ import org.springframework.web.multipart.MultipartFile;
 @Component
 public class OperLogAspect {
 
+    private static final Logger logger = LoggerFactory.getLogger(OperLogAspect.class);
     private static final String SUCCESS = "SUCCESS";
     private static final String FAIL = "FAIL";
-    private static final String UNKNOWN = "unknown";
     private static final int MAX_TEXT_LENGTH = 2000;
 
     private final SysOperLogMapper operLogMapper;
@@ -65,7 +68,7 @@ public class OperLogAspect {
             log.setRequestMethod(request == null ? null : request.getMethod());
             log.setRequestUrl(request == null ? null : request.getRequestURI());
             fillOperator(log);
-            log.setOperatorIp(request == null ? null : getClientIp(request));
+            log.setOperatorIp(request == null ? null : IpUtil.getClientIp(request));
             log.setRequestParams(mask(truncate(toJson(filterArgs(joinPoint.getArgs())))));
             log.setResponseResult(truncate(toJson(result)));
             log.setCostTime(costTime);
@@ -73,8 +76,8 @@ public class OperLogAspect {
             log.setErrorMessage(error == null ? null : truncate(error.getMessage()));
             log.setOperationTime(LocalDateTime.now());
             operLogMapper.insert(log);
-        } catch (RuntimeException ignored) {
-            // 操作日志失败不能影响业务请求。
+        } catch (RuntimeException e) {
+            logger.warn("操作日志记录失败", e);
         }
     }
 
@@ -88,8 +91,8 @@ public class OperLogAspect {
                     log.setOperatorName(user.getUsername());
                 }
             }
-        } catch (RuntimeException ignored) {
-            // 未登录或上下文不可用时保留空操作人。
+        } catch (RuntimeException e) {
+            logger.debug("获取操作人信息失败", e);
         }
     }
 
@@ -131,16 +134,5 @@ public class OperLogAspect {
             return attributes.getRequest();
         }
         return null;
-    }
-
-    private String getClientIp(HttpServletRequest request) {
-        String[] headerNames = {"X-Forwarded-For", "X-Real-IP", "Proxy-Client-IP", "WL-Proxy-Client-IP"};
-        for (String headerName : headerNames) {
-            String value = request.getHeader(headerName);
-            if (StringUtils.hasText(value) && !UNKNOWN.equalsIgnoreCase(value)) {
-                return value.split(",")[0].trim();
-            }
-        }
-        return request.getRemoteAddr();
     }
 }

@@ -129,6 +129,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, StatusUpdateRequest request) {
         requireUser(id);
         SysUser user = new SysUser();
@@ -154,6 +155,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResetPasswordVO resetPassword(Long id) {
         requireUser(id);
         String password = systemProperties.getDefaultPassword();
@@ -165,6 +167,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void changeCurrentPassword(PasswordChangeRequest request) {
         SysUser user = requireUser(StpUtil.getLoginIdAsLong());
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
@@ -177,6 +180,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateCurrentAvatar(AvatarUpdateRequest request) {
         SysUser user = requireUser(StpUtil.getLoginIdAsLong());
         SysUser update = new SysUser();

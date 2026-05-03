@@ -73,6 +73,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void create(RoleSaveRequest request) {
         ensureRoleCodeUnique(request.getRoleCode(), null);
         SysRole role = new SysRole();
@@ -84,6 +85,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(Long id, RoleSaveRequest request) {
         SysRole existing = requireRole(id);
         if (Objects.equals(existing.getIsBuiltin(), BUILTIN)
@@ -120,6 +122,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, StatusUpdateRequest request) {
         requireRole(id);
         SysRole role = new SysRole();

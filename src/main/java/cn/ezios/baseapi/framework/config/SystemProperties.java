@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "system")
 public class SystemProperties {
 
-    private String defaultPassword = "admin123";
+    private String defaultPassword;
 
     private boolean logClearEnabled;
 

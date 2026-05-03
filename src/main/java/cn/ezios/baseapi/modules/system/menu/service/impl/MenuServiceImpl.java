@@ -73,6 +73,7 @@ public class MenuServiceImpl implements MenuService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void create(MenuSaveRequest request) {
         ensurePermissionUnique(request.getPermissionCode(), null);
         SysMenu menu = new SysMenu();
@@ -85,6 +86,7 @@ public class MenuServiceImpl implements MenuService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(Long id, MenuSaveRequest request) {
         SysMenu existing = requireMenu(id);
         if (Objects.equals(existing.getIsBuiltin(), BUILTIN)
@@ -119,6 +121,7 @@ public class MenuServiceImpl implements MenuService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, StatusUpdateRequest request) {
         requireMenu(id);
         SysMenu menu = new SysMenu();

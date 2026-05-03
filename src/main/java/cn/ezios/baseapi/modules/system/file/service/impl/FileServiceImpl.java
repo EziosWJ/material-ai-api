@@ -66,9 +66,12 @@ public class FileServiceImpl implements FileService {
             storageName = storageName + "." + extension;
         }
         String datePath = DATE_PATH_FORMATTER.format(LocalDate.now());
-        Path uploadRoot = Path.of(systemProperties.getFile().getUploadRoot()).normalize();
+        Path uploadRoot = Path.of(systemProperties.getFile().getUploadRoot()).toAbsolutePath().normalize();
         Path relativePath = Path.of(datePath, storageName);
         Path targetPath = uploadRoot.resolve(relativePath).normalize();
+        if (!targetPath.startsWith(uploadRoot)) {
+            throw new BusinessException("非法文件路径");
+        }
         try {
             Files.createDirectories(targetPath.getParent());
             file.transferTo(targetPath);
@@ -133,6 +136,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(Long id, FileUpdateRequest request) {
         requireFile(id);
         SysFile file = new SysFile();
@@ -143,6 +147,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
         requireFile(id);
         fileMapper.deleteById(id);
@@ -157,6 +162,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long id, StatusUpdateRequest request) {
         requireFile(id);
         SysFile file = new SysFile();
@@ -187,7 +193,11 @@ public class FileServiceImpl implements FileService {
 
     private Resource loadResource(SysFile file) {
         try {
-            Path path = Path.of(systemProperties.getFile().getUploadRoot()).resolve(file.getStoragePath()).normalize();
+            Path uploadRoot = Path.of(systemProperties.getFile().getUploadRoot()).toAbsolutePath().normalize();
+            Path path = uploadRoot.resolve(file.getStoragePath()).normalize();
+            if (!path.startsWith(uploadRoot)) {
+                throw new BusinessException(ResponseCode.NOT_FOUND);
+            }
             Resource resource = new UrlResource(path.toUri());
             if (!resource.exists() || !resource.isReadable()) {
                 throw new BusinessException(ResponseCode.NOT_FOUND);

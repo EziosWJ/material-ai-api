@@ -14,8 +14,6 @@ public class SaTokenConfig implements WebMvcConfigurer {
 
     private static final List<String> EXCLUDE_PATHS = List.of(
             "/api/auth/login",
-            // TODO: 预览接口临时免登录，后续改为签名 URL 方案
-            "/api/system/file/*/view",
             "/doc.html",
             "/webjars/**",
             "/favicon.ico",
