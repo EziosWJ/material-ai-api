@@ -38,3 +38,4 @@ build/
 .agents
 .claude
 tmp
+uploads
