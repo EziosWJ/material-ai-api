@@ -40,7 +40,8 @@
 - 允许请求头：`Authorization`、`Content-Type`。
 - 允许方法：`GET`、`POST`、`PUT`、`DELETE`、`PATCH`、`OPTIONS`。
 - prod 必须按实际域名配置。
-## Knife4j 契约
+## 接口文档契约
+- 使用 SpringDoc OpenAPI。
 - 仅 dev 开启。
 - prod 关闭文档入口。
 - 按认证、用户、角色、菜单、部门、字典、日志、文件分组。
@@ -54,4 +55,4 @@
 - 未登录访问后台接口返回统一 `401` 响应。
 - 参数校验失败返回统一 `400` 响应和字段级错误。
 - MyBatis-Plus 分页、逻辑删除、自动填充可用。
-- CORS、Knife4j、Sa-Token 配置按环境生效。
+- CORS、SpringDoc OpenAPI、Sa-Token 配置按环境生效。

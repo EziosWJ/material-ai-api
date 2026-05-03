@@ -98,7 +98,7 @@
 - 允许请求头：`Authorization`、`Content-Type`。
 - 允许方法：`GET`、`POST`、`PUT`、`DELETE`、`PATCH`、`OPTIONS`。
 - `prod` 必须按实际域名配置，不使用宽泛来源。
-## Knife4j
-- Knife4j 按模块分组展示接口文档。
-- Knife4j 仅在 `dev` 环境开启。
+## 接口文档
+- 使用 SpringDoc OpenAPI 按模块分组展示接口文档。
+- 仅在 `dev` 环境开启。
 - `prod` 环境关闭文档入口。

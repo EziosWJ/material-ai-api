@@ -1175,7 +1175,7 @@ Body: {"status": 1}
 
 ### 11.8 API 文档
 
-开发环境可通过 Knife4j 查看完整 API 文档，地址通常为：`http://localhost:8080/doc.html`
+开发环境可通过 SpringDoc 查看完整 API 文档，地址为：`http://localhost:8080/swagger-ui.html`
 
 ---
 

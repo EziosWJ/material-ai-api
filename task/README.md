@@ -4,7 +4,7 @@
 - 执行任一任务前必须阅读 `doc/development-constraints.md`。
 - 涉及模块开发、表结构、CRUD、认证、SQL、日志、文件、权限时，还必须阅读 `doc/ai-project-prompt.md`。
 ## 全局开发约束
-- 使用 Java 21、Spring Boot 3.x、MySQL 8.0、MyBatis-Plus、Sa-Token、Lombok、Knife4j、Spring Validation、Hutool。
+- 使用 Java 21、Spring Boot 3.x、MySQL 8.0、MyBatis-Plus、Sa-Token、Lombok、SpringDoc OpenAPI、Spring Validation、Hutool。
 - 单 Spring Boot 应用，单 Maven module，包级模块化。
 - 接口统一前缀 `/api`。
 - 后台资源路径统一使用单数：`/api/system/user`、`/api/system/role`、`/api/system/menu`。

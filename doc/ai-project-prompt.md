@@ -12,7 +12,7 @@
 - MyBatis-Plus。
 - Sa-Token。
 - Lombok。
-- Knife4j。
+- SpringDoc OpenAPI。
 - Spring Validation。
 - Hutool。
 - 构建工具使用 Maven。
@@ -206,10 +206,10 @@
 - 允许请求头：`Authorization`、`Content-Type`。
 - 允许方法：`GET`、`POST`、`PUT`、`DELETE`、`PATCH`、`OPTIONS`。
 - `prod` 必须按实际域名配置，不使用宽泛来源。
-## Knife4j
-- Knife4j 用于生成接口文档。
-- Knife4j 按模块分组展示接口文档。
-- Knife4j 仅在 `dev` 环境开启。
+## 接口文档
+- 使用 SpringDoc OpenAPI 生成接口文档。
+- 按模块分组展示接口文档。
+- 仅在 `dev` 环境开启。
 - `prod` 环境关闭文档入口。
 ## 环境配置
 - 环境区分为 `dev` 和 `prod`。
@@ -225,6 +225,6 @@
 - Controller、DTO、VO、Entity 命名必须清晰表达用途。
 - Mapper XML 只用于复杂 SQL，简单 CRUD 优先使用 MyBatis-Plus。
 - 涉及删除时必须区分逻辑删除和物理删除；除日志清空外，默认使用逻辑删除。
-- 生成接口时同步考虑 Knife4j 注解和分组。
+- 生成接口时同步考虑 SpringDoc OpenAPI 注解和分组。
 - 生成数据库字段、Java 字段、JSON 字段时必须遵守命名规范。
 - 遇到约束冲突时，优先遵守本文档；无法判断时先提出问题，不要自行扩展。

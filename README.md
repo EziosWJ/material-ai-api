@@ -11,7 +11,7 @@
 | MySQL | 8.0 |
 | MyBatis-Plus | 3.5.15 |
 | Sa-Token | 1.45.0 |
-| Knife4j (springdoc) | 2.8.6 |
+| SpringDoc OpenAPI | 2.8.6 |
 | Lombok | 1.18.44 |
 | Hutool | 5.8.38 |
 
@@ -28,7 +28,7 @@ src/main/java/cn/ezios/baseapi/
 │   │   ├── CorsConfig       # CORS 跨域配置
 │   │   ├── SaTokenConfig    # Sa-Token 认证配置
 │   │   ├── MybatisPlusConfig# MyBatis-Plus 分页插件
-│   │   ├── OpenApiConfig    # Knife4j/SpringDoc 接口文档
+│   │   ├── OpenApiConfig    # SpringDoc OpenAPI 接口文档
 │   │   ├── PasswordConfig   # BCrypt 密码编码器
 │   │   └── SystemProperties # 自定义配置项
 │   ├── handler/             # 全局异常处理器、审计字段自动填充
@@ -190,7 +190,7 @@ src/main/java/cn/ezios/baseapi/
 
 | 配置项 | dev | prod |
 |--------|-----|------|
-| Knife4j 文档 | 开启 | 关闭 |
+| 接口文档 (SpringDoc) | 开启 | 关闭 |
 | 日志清空接口 | 开启 | 关闭 |
 | CORS 来源 | `http://localhost:5173` | 按实际域名配置 |
 | 数据库 | 本机 MySQL | 按实际配置 |
@@ -211,7 +211,7 @@ src/main/java/cn/ezios/baseapi/
    ```
 2. 修改 `application.yml` 中的数据库连接配置（环境变量 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD`）
 3. 运行 `BaseApiAdminApplication`
-4. 访问 Knife4j 文档：`http://localhost:8080/doc.html`
+4. 访问接口文档：`http://localhost:8080/swagger-ui.html`
 
 ### 初始化账号
 
