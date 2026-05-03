@@ -5,6 +5,7 @@ import cn.ezios.baseapi.common.model.BatchIdsRequest;
 import cn.ezios.baseapi.common.model.PageResult;
 import cn.ezios.baseapi.common.model.StatusUpdateRequest;
 import cn.ezios.baseapi.framework.log.OperLog;
+import cn.ezios.baseapi.modules.system.file.dto.BatchUploadResult;
 import cn.ezios.baseapi.modules.system.file.dto.FilePageQuery;
 import cn.ezios.baseapi.modules.system.file.dto.FileUpdateRequest;
 import cn.ezios.baseapi.modules.system.file.service.FileResource;
@@ -15,7 +16,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -59,9 +59,9 @@ public class FileController {
     @OperLog(title = "文件管理", type = "CREATE")
     @Operation(summary = "批量上传文件")
     @PostMapping("/upload-batch")
-    public ApiResponse<List<FileVO>> uploadBatch(@RequestParam MultipartFile[] files,
-                                                 @RequestParam(required = false) String businessModule,
-                                                 @RequestParam(required = false) String remark) {
+    public ApiResponse<BatchUploadResult> uploadBatch(@RequestParam MultipartFile[] files,
+                                                      @RequestParam(required = false) String businessModule,
+                                                      @RequestParam(required = false) String remark) {
         return ApiResponse.success(fileService.uploadBatch(files, businessModule, remark));
     }
 

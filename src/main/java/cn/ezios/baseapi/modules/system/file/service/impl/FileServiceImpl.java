@@ -8,6 +8,7 @@ import cn.ezios.baseapi.common.model.BatchIdsRequest;
 import cn.ezios.baseapi.common.model.PageResult;
 import cn.ezios.baseapi.common.model.StatusUpdateRequest;
 import cn.ezios.baseapi.framework.config.SystemProperties;
+import cn.ezios.baseapi.modules.system.file.dto.BatchUploadResult;
 import cn.ezios.baseapi.modules.system.file.dto.FilePageQuery;
 import cn.ezios.baseapi.modules.system.file.dto.FileUpdateRequest;
 import cn.ezios.baseapi.modules.system.file.entity.SysFile;
@@ -23,7 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.BeanUtils;
@@ -93,11 +94,23 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public List<FileVO> uploadBatch(MultipartFile[] files, String businessModule, String remark) {
+    public BatchUploadResult uploadBatch(MultipartFile[] files, String businessModule, String remark) {
         if (files == null || files.length == 0) {
             throw new BusinessException("文件不能为空");
         }
-        return Arrays.stream(files).map(file -> upload(file, businessModule, remark)).toList();
+        List<FileVO> succeeded = new ArrayList<>();
+        List<BatchUploadResult.FailedItem> failed = new ArrayList<>();
+        for (MultipartFile file : files) {
+            try {
+                succeeded.add(upload(file, businessModule, remark));
+            } catch (Exception ex) {
+                String fileName = file != null && file.getOriginalFilename() != null
+                        ? file.getOriginalFilename()
+                        : "unknown";
+                failed.add(new BatchUploadResult.FailedItem(fileName, ex.getMessage()));
+            }
+        }
+        return new BatchUploadResult(succeeded, failed);
     }
 
     @Override

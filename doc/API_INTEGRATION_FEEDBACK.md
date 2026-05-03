@@ -78,6 +78,35 @@
 
 **说明**：后端所有 Controller 路径均为单数形式（`/system/user`、`/system/role`、`/system/menu` 等），不存在旧的复数路径。前端菜单树配置应与后端一致。
 
+### 9. 文件预览接口鉴权放行
+
+**问题**：`GET /api/system/file/{id}/view` 要求登录，`<img src>` / `<iframe src>` 无法携带 token。
+
+**处理**：预览接口已加入 Sa-Token 排除路径，无需登录即可访问。下载接口仍保持登录要求。
+
+**注意**：这是临时方案，后续计划改为签名 URL。前端可直接使用 `<img src="/api/system/file/{id}/view">` 预览图片。
+
+### 10. 批量上传部分失败处理
+
+**问题**：`POST /api/system/file/upload-batch` 某个文件失败时，前面已成功的文件已入库但前端收到错误。
+
+**处理**：批量上传接口改为始终返回 200，通过响应体中的 `succeeded` 和 `failed` 数组区分成功和失败：
+
+```
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "succeeded": [FileVO, ...],
+    "failed": [
+      {"fileName": "a.txt", "message": "单文件不能超过 50MB"}
+    ]
+  }
+}
+```
+
+前端应遍历 `failed` 数组提示用户哪些文件上传失败及原因。
+
 ---
 
 ## 待协商事项

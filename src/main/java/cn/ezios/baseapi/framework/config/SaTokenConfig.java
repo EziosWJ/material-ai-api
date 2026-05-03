@@ -1,6 +1,7 @@
 package cn.ezios.baseapi.framework.config;
 
 import cn.dev33.satoken.interceptor.SaInterceptor;
+import cn.dev33.satoken.router.SaHttpMethod;
 import cn.dev33.satoken.router.SaRouter;
 import cn.dev33.satoken.stp.StpUtil;
 import java.util.List;
@@ -13,6 +14,8 @@ public class SaTokenConfig implements WebMvcConfigurer {
 
     private static final List<String> EXCLUDE_PATHS = List.of(
             "/api/auth/login",
+            // TODO: 预览接口临时免登录，后续改为签名 URL 方案
+            "/api/system/file/*/view",
             "/doc.html",
             "/webjars/**",
             "/favicon.ico",
@@ -24,7 +27,12 @@ public class SaTokenConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new SaInterceptor(handle -> SaRouter.match("GET", "POST", "PUT", "DELETE", "PATCH")
+        registry.addInterceptor(new SaInterceptor(handle -> SaRouter.match(
+                                SaHttpMethod.GET,
+                                SaHttpMethod.POST,
+                                SaHttpMethod.PUT,
+                                SaHttpMethod.DELETE,
+                                SaHttpMethod.PATCH)
                         .match("/api/**")
                         .notMatch(EXCLUDE_PATHS)
                         .check(StpUtil::checkLogin)))
