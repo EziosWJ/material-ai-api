@@ -1,229 +1,219 @@
-# Base API Admin
+# 本地化智能材料写作平台 Java 后端
 
-通用后台管理系统后端模板，服务 React 管理后台。采用单 Spring Boot 应用 + 包级模块化的单体架构。
+当前项目是“本地化智能材料写作平台”的 Java 业务后端，负责业务主控、认证权限、材料主数据、文件记录、写作任务、问答记录、业务状态管理和调用审计。
+
+本项目基于 `base-api` 脚手架复制和改造而来。原脚手架提供了通用后台管理能力，包括认证、RBAC、用户、角色、菜单、部门、字典、系统配置、文件、登录日志、操作日志、统一响应、统一分页、统一异常处理等基础能力。当前仓库已经进入具体业务系统阶段，项目主身份不再是通用后台模板。
 
 ## 技术栈
 
-| 组件 | 版本 |
-|------|------|
+| 组件 | 当前项目情况 |
+|---|---|
 | Java | 21 |
 | Spring Boot | 3.5.14 |
-| MySQL | 8.0 |
+| MySQL | 8.0 系列；当前驱动为 mysql-connector-j 8.4.0 |
 | MyBatis-Plus | 3.5.15 |
 | Sa-Token | 1.45.0 |
-| SpringDoc OpenAPI | 2.8.6 |
 | Lombok | 1.18.44 |
+| Knife4j / OpenAPI | 当前通过 SpringDoc OpenAPI 2.8.6 暴露接口文档 |
+| Spring Validation | spring-boot-starter-validation |
 | Hutool | 5.8.38 |
+
+## 系统关系
+
+系统调用链必须保持：
+
+```text
+前端 React 项目 -> Java 后端 API -> Python AI 服务
+```
+
+- 前端只调用 Java 后端 API。
+- Java 后端是业务主控层，对前端提供统一 API。
+- Java 后端通过 HTTP 调用 Python AI 服务，并传入必要业务上下文。
+- Python AI 服务是无状态 AI 能力服务，不直接访问 Java 业务数据库。
+
+## Java 后端职责
+
+- 用户认证与登录态管理。
+- RBAC 权限控制。
+- 用户、角色、菜单、部门、字典、系统配置等系统管理。
+- 文件上传与文件记录管理。
+- 材料主数据管理。
+- 材料上传记录与处理状态管理。
+- 写作任务管理。
+- 问答记录管理。
+- AI 调用审计。
+- 调用 Python AI 服务。
+- 统一响应、统一分页、统一异常处理。
+- 操作日志、登录日志等审计能力。
+
+Java 后端不应只作为 Python AI 服务的简单转发层。AI 相关业务请求进入 Java 后端后，应先完成认证、权限、参数校验、材料范围控制、业务状态记录和调用审计，再调用 Python AI 服务。
+
+## Python AI 服务边界
+
+Python AI 服务只提供无状态 AI 能力，包括材料解析、片段切分、embedding、材料向量维护、向量检索、大模型生成等。
+
+Python AI 服务不负责：
+
+- 直接访问 Java 业务数据库。
+- 管理用户、角色、权限。
+- 管理材料主数据。
+- 管理写作任务状态。
+- 保存 Java 后端展示所需的业务记录和审计日志。
 
 ## 项目结构
 
-```
-src/main/java/cn/ezios/baseapi/
-├── common/                  # 公共模块
-│   ├── enums/               # 枚举定义（ResponseCode 等）
-│   ├── exception/           # 自定义异常（BusinessException）
-│   └── model/               # 通用模型（ApiResponse、PageResult、PageQuery、BatchIdsRequest、StatusUpdateRequest）
-├── framework/               # 框架层
-│   ├── config/              # 配置类
-│   │   ├── CorsConfig       # CORS 跨域配置
-│   │   ├── SaTokenConfig    # Sa-Token 认证配置
-│   │   ├── MybatisPlusConfig# MyBatis-Plus 分页插件
-│   │   ├── OpenApiConfig    # SpringDoc OpenAPI 接口文档
-│   │   ├── PasswordConfig   # BCrypt 密码编码器
-│   │   └── SystemProperties # 自定义配置项
-│   ├── handler/             # 全局异常处理器、审计字段自动填充
-│   └── log/                 # 操作日志切面（@OperLog 注解）
-└── modules/                 # 业务模块
-    ├── auth/                # 认证模块（登录、登出、当前用户信息、当前用户菜单）
-    └── system/              # 系统管理模块
-        ├── user/            # 用户管理
-        ├── role/            # 角色管理
-        ├── menu/            # 菜单管理
-        ├── dept/            # 部门管理
-        ├── dict/            # 字典管理（字典类型 + 字典数据）
-        ├── log/             # 日志管理（登录日志、操作日志）
-        ├── file/            # 文件管理
-        └── config/          # 系统配置管理
+当前项目是单体 Spring Boot 应用、单 Maven 模块，主要目录如下：
+
+```text
+.
+├── pom.xml
+├── README.md
+├── CLAUDE.md
+├── AGENTS.md -> CLAUDE.md
+├── docs/
+│   ├── domain-language.md
+│   ├── backend-architecture.md
+│   ├── python-ai-service-contract.md
+│   ├── BACKEND_PROJECT_DOCS_MIGRATION_SUMMARY.md
+│   └── agents/
+├── src/main/java/cn/ezios/baseapi/
+│   ├── BaseApiAdminApplication.java
+│   ├── common/
+│   │   ├── enums/
+│   │   ├── exception/
+│   │   ├── model/
+│   │   └── util/
+│   ├── framework/
+│   │   ├── config/
+│   │   ├── handler/
+│   │   └── log/
+│   └── modules/
+│       ├── auth/
+│       └── system/
+│           ├── config/
+│           ├── dept/
+│           ├── dict/
+│           ├── file/
+│           ├── log/
+│           ├── menu/
+│           ├── role/
+│           └── user/
+└── src/main/resources/
+    ├── application.yml
+    └── sql/
+        ├── init.sql
+        ├── schema.sql
+        └── data.sql
 ```
 
 ## 模块分层
 
-每个业务模块统一分层：
+现有模块采用包级模块化，每个业务模块通常按以下层次组织：
 
-- `controller` — 接口入口、参数校验、响应封装
-- `service` — 业务逻辑接口
-- `service.impl` — 服务实现
-- `mapper` — 数据库访问（MyBatis-Plus BaseMapper）
-- `entity` — 数据库实体
-- `dto` — 请求参数（入参校验）
-- `vo` — 响应数据（返回前端）
+- `controller`：接口入口、参数校验、响应封装。
+- `service`：业务逻辑接口。
+- `service.impl`：业务实现。
+- `mapper`：数据库访问，基于 MyBatis-Plus。
+- `entity`：数据库实体。
+- `dto`：请求参数。
+- `vo`：返回给前端的数据结构。
 
-## 权限模型
+## 现有基础模块
 
-采用 RBAC 权限模型：**用户 -> 角色 -> 菜单**
+### auth
 
-- 使用 Sa-Token 实现认证鉴权，Token 通过 `Authorization: Bearer <token>` 传递
-- Token 有效期 2 小时，滑动续期，允许同一账号多端登录
-- 第一版实现登录态校验和菜单可见控制
-- `permission_code` 字段预留，暂不实现按钮/接口/数据权限
+认证登录模块，提供登录、登出、当前用户信息、当前用户菜单等能力。
 
-## 数据库设计规范
+### system
 
-- 表名统一使用 `sys_` 前缀
-- 主键使用 `BIGINT` 自增
-- 字段命名使用 `snake_case`，Java/JSON 字段使用 `camelCase`
-- 布尔字段使用 `tinyint`：`status`(1=启用/0=禁用)、`visible`(1=显示/0=隐藏)、`is_builtin`(1=内置/0=普通)
-- 逻辑删除字段 `deleted`：`0=正常`、`1=已删除`（语义与普通布尔相反）
-- 时间字段统一使用 `datetime`，`create_time`/`update_time` 由 MyBatis-Plus 自动填充
-- 不使用数据库外键，删除约束由 Service 层控制
+系统管理模块，继承脚手架能力，包含用户、角色、菜单、部门、字典、系统配置、文件、登录日志、操作日志等。
 
-### 核心表
+新业务代码不要污染 `system` 系统模块。材料、写作、问答、AI 调用等业务能力应按领域新增模块。
 
-| 表名 | 说明 |
-|------|------|
-| `sys_user` | 用户表 |
-| `sys_role` | 角色表 |
-| `sys_menu` | 菜单表（支持目录、菜单、外链） |
-| `sys_user_role` | 用户-角色关联表 |
-| `sys_role_menu` | 角色-菜单关联表 |
-| `sys_dept` | 部门表（树形结构） |
-| `sys_dict_type` | 字典类型表 |
-| `sys_dict_data` | 字典数据表 |
-| `sys_file` | 文件记录表 |
-| `sys_config` | 系统配置表 |
-| `sys_login_log` | 登录日志表 |
-| `sys_oper_log` | 操作日志表 |
+## 推荐业务模块
 
-## 接口规范
+后续业务模块可在 `src/main/java/cn/ezios/baseapi/modules/` 下按领域组织：
 
-- 统一前缀：`/api`
-- REST 风格，资源名使用单数
-- 分页接口：`GET /page?page=1&pageSize=10`
-- 批量删除：`POST /batch-delete`，Body: `{"ids":[1,2,3]}`
-- 状态变更：`PATCH /{id}/status`，Body: `{"status":1}`
-- 资源分配：`PUT /{id}/roles` 或 `PUT /{id}/menus`
+| 模块 | 说明 |
+|---|---|
+| `material` | 材料主数据、材料状态、材料处理记录 |
+| `writing` | 写作任务、写作结果、写作版本 |
+| `qa` | 材料问答记录 |
+| `ai` | Python AI 服务调用封装、AI 调用日志、模型配置 |
+| `knowledge` | 片段、来源片段、材料向量维护记录，可根据实际情况合并到 `material` 或 `ai` |
 
-### 响应结构
+如后续已有更明确包结构，应优先保持项目当前风格，不要为了文档建议强行重构。
+
+## 接口约定
+
+- REST API 统一使用 `/api` 前缀。
+- 资源路径优先使用单数名词，例如 `/api/system/user`、`/api/system/role`、`/api/material`、`/api/writing/task`。
+- 分页接口沿用统一分页结构。
+- 响应沿用统一响应结构。
+- 异常由全局异常处理统一转换。
+
+### 响应结构示例
 
 ```json
-// 成功
-{"code": 200, "message": "success", "data": {...}}
+{"code": 200, "message": "success", "data": {}}
+```
 
-// 分页
+```json
 {"code": 200, "message": "success", "data": {"records": [], "total": 100, "page": 1, "pageSize": 10}}
+```
 
-// 失败
+```json
 {"code": 400, "message": "错误信息", "data": null}
 ```
 
-### 响应码
+## 数据库约定
 
-| code | 含义 |
-|------|------|
-| 200 | 成功 |
-| 400 | 参数校验失败 |
-| 401 | 未登录或 Token 失效 |
-| 403 | 无权限 |
-| 404 | 数据不存在 |
-| 500 | 系统错误 |
+- 系统管理表继续使用 `sys_` 前缀。
+- 材料业务表建议使用 `material_` 前缀。
+- 写作任务表建议使用 `writing_` 前缀。
+- AI 调用、模型配置、调用日志建议使用 `ai_` 前缀。
+- 片段、来源片段、向量维护记录可使用 `kb_`、`material_` 或 `ai_` 前缀，但必须在文档中说明清楚。
+- 不要把新业务表全部塞进 `sys_` 前缀。
+- 主键优先使用 `BIGINT` 自增。
+- 业务删除优先使用逻辑删除，字段沿用 `deleted`。
+- 常用字段建议包含 `create_time`、`update_time`、`deleted`、`status`。
+- 当前脚手架 SQL 未使用数据库外键，优先通过 Service 层维护业务关系。
 
-## 功能模块
+## 本地启动
 
-### 认证模块 (auth)
+1. 准备 MySQL 数据库，默认连接配置来自 `src/main/resources/application.yml`：
 
-- 登录/登出：`POST /api/auth/login`、`POST /api/auth/logout`
-- 当前用户信息：`GET /api/auth/me`
-- 当前用户菜单树：`GET /api/auth/menus`
+   ```text
+   DB_URL 默认值：jdbc:mysql://localhost:3306/base_api?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+   DB_USERNAME：必须通过环境变量提供
+   DB_PASSWORD：必须通过环境变量提供
+   ```
 
-### 用户管理
+2. 在 MySQL 中执行初始化脚本。脚本位于 `src/main/resources/sql/`，`init.sql` 会依次加载 `schema.sql` 和 `data.sql`：
 
-- 标准 CRUD：分页、详情、新增、修改、删除、批量删除
-- 启用/禁用、分配角色、重置密码
-- 当前用户修改密码和头像
-
-### 角色管理
-
-- 标准 CRUD：分页、详情、新增、修改、删除、批量删除
-- 启用/禁用、分配菜单、角色选择列表（下拉用）
-
-### 菜单管理
-
-- 菜单树查询、分页、详情、新增、修改、删除、批量删除
-- 支持目录(DIR)、菜单(MENU)、外链(LINK) 三种类型
-- 内置菜单保护
-
-### 部门管理
-
-- 部门树查询、部门选择树（下拉用）、分页、详情、新增、修改、删除、批量删除
-- 树形结构，根节点 `parent_id=0`
-
-### 字典管理
-
-- 字典类型：分页、详情、新增、修改、删除、批量删除、启用/禁用
-- 字典数据：分页、详情、新增、修改、删除、批量删除
-- 按编码查询字典项：`GET /api/system/dict/{dictCode}/items`
-
-### 文件管理
-
-- 单文件上传、批量文件上传
-- 文件列表、详情、修改、删除、批量删除、启用/禁用
-- 文件预览：`GET /api/system/file/{id}/view`
-- 文件下载：`GET /api/system/file/{id}/download`
-- 本地文件存储，按日期分组：`uploads/yyyy/MM/dd/xxx.ext`
-- 单文件最大 50MB
-
-### 日志管理
-
-- 登录日志：分页、详情、清空（物理删除）
-- 操作日志：分页、详情、清空（物理删除）
-- 操作日志通过 `@OperLog` 注解自动记录关键写操作
-- 敏感字段自动脱敏（password、token 等）
-- 清空接口通过 `system.log-clear-enabled` 配置开关控制
-
-### 系统配置
-
-- 配置项 CRUD：分页、详情、新增、修改、删除、批量删除
-- 按配置键查询：`GET /api/system/config/key/{configKey}`
-- 内置配置项保护
-
-## 环境配置
-
-| 配置项 | dev | prod |
-|--------|-----|------|
-| 接口文档 (SpringDoc) | 开启 | 关闭 |
-| 日志清空接口 | 开启 | 关闭 |
-| CORS 来源 | `http://localhost:5173` | 按实际域名配置 |
-| 数据库 | 本机 MySQL | 按实际配置 |
-
-### 自定义配置项
-
-| 配置项 | 默认值 | 说明 |
-|--------|--------|------|
-| `system.default-password` | `admin123` | 新增用户默认密码 |
-| `system.log-clear-enabled` | dev=true, prod=false | 日志清空开关 |
-| `system.file.upload-root` | `uploads` | 本地文件上传根目录 |
-
-## 快速启动
-
-1. 创建数据库并执行初始化脚本：
    ```sql
    SOURCE src/main/resources/sql/init.sql;
    ```
-2. 修改 `application.yml` 中的数据库连接配置（环境变量 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD`）
-3. 运行 `BaseApiAdminApplication`
-4. 访问接口文档：`http://localhost:8080/swagger-ui.html`
+
+3. 启动应用：
+
+   ```bash
+   mvn spring-boot:run
+   ```
+
+   也可以在 IDE 中运行 `cn.ezios.baseapi.BaseApiAdminApplication`。
+
+4. 默认端口为 `8080`。开发环境启用接口文档：
+
+   ```text
+   http://localhost:8080/swagger-ui.html
+   ```
 
 ### 初始化账号
 
 | 账号 | 密码 | 说明 |
-|------|------|------|
-| admin | admin123 | 超级管理员 |
-
-## 开发约束
-
-- 详见 [doc/development-constraints.md](doc/development-constraints.md)
-- 详见 [doc/ai-project-prompt.md](doc/ai-project-prompt.md)
-- 前端对接指南：[doc/frontend-api-guide.md](doc/frontend-api-guide.md)
+|---|---|---|
+| `admin` | `admin123` | 超级管理员 |
 
 ## 构建
 
@@ -231,3 +221,20 @@ src/main/java/cn/ezios/baseapi/
 mvn clean package -DskipTests
 java -jar target/base_api_admin-v1.0.0.jar
 ```
+
+## 开发约定
+
+- 默认使用中文领域术语，详见 `docs/domain-language.md`。
+- 新业务模块按领域组织。
+- 系统管理能力继承脚手架，不要随意重构。
+- 新业务代码不要污染 `sys` 系统模块。
+- 不要引入不必要的新依赖。
+- 不要改成多模块 Maven，除非用户明确要求。
+- 每次完成开发或文档任务后，在 `docs` 目录写入总结文档，至少包含修改文件、实现内容、验证结果、未完成事项。
+
+## 相关文档
+
+- `CLAUDE.md`：AI 编程 Agent 统一入口说明。
+- `docs/domain-language.md`：领域语言。
+- `docs/backend-architecture.md`：后端架构边界。
+- `docs/python-ai-service-contract.md`：Java 后端与 Python AI 服务对接边界。

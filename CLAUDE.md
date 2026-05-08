@@ -1,17 +1,197 @@
-# CLAUDE.md
+# 本地化智能材料写作平台 Java 后端 Agent 入口
 
-please must read AGENTS.md first。
+首先：必须使用中文。
 
-## Agent skills
+本文件是 Claude Code、Codex 和其他 AI 编程 Agent 进入当前仓库时的统一项目入口说明。`AGENTS.md` 应以软链接形式指向本文件，避免多份 Agent 规则漂移。
 
-### Issue tracker
+## 语言要求
 
-GitHub Issues — 使用 `gh` CLI 管理。See `docs/agents/issue-tracker.md`.
+- 回答、总结、代码说明、文档默认使用中文。
+- 接口说明、注释、开发文档优先使用中文。
+- 代码命名可以使用英文，但必须符合领域语义。
 
-### Triage labels
+## 项目身份
 
-五个标准角色标签：needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix。See `docs/agents/triage-labels.md`.
+- 当前项目不是通用模板项目，而是“本地化智能材料写作平台 Java 后端”。
+- 当前项目基于 `base-api` 脚手架演进。
+- 不要把业务改动反向写回脚手架定位。
+- 不要在文档中继续把当前项目描述为纯脚手架。
+- 保留脚手架来源说明，但项目主身份必须是具体业务系统。
 
-### Domain docs
+## 技术栈与架构约束
 
-单上下文布局 — CONTEXT.md + docs/adr/ 在仓库根目录。See `docs/agents/domain.md`.
+- Java 21。
+- Spring Boot 3.x，当前为 3.5.14。
+- 单体 Spring Boot 应用。
+- 单 Maven 模块。
+- MySQL 8.0 系列。
+- MyBatis-Plus。
+- Sa-Token。
+- Lombok。
+- Knife4j / OpenAPI，当前通过 SpringDoc OpenAPI 暴露接口文档。
+- Spring Validation。
+- Hutool。
+- REST API 统一使用 `/api` 前缀。
+- 资源路径优先使用单数名词，例如 `/api/system/user`、`/api/system/role`、`/api/material`、`/api/writing/task`。
+- 使用统一响应结构。
+- 使用统一分页结构。
+- 使用统一异常处理。
+- 不要引入不必要的新依赖。
+- 不要改成多模块 Maven，除非用户明确要求。
+
+## Java 后端职责边界
+
+- Java 后端是业务主控层。
+- Java 后端负责用户、权限、材料主数据、文件记录、写作任务、问答记录、业务状态、调用审计。
+- Java 后端通过 HTTP 调用 Python AI 服务。
+- Java 后端负责把业务上下文传给 Python AI 服务。
+- Java 后端负责对前端提供统一 API。
+- Java 后端负责统一认证、权限、日志、异常、分页和响应格式。
+- Java 后端不应把 AI 相关请求简单透传给 Python，应负责权限校验、参数校验、材料范围控制、业务状态记录和调用审计。
+
+## Python AI 服务边界
+
+- Python AI 服务是无状态能力服务。
+- Python AI 服务不直接访问 Java 业务数据库。
+- Python AI 服务不管理用户、角色、权限、材料主数据和写作任务状态。
+- Python AI 服务只负责材料解析、片段切分、embedding、材料向量维护、向量检索、大模型生成等 AI 能力。
+- Java 调用 Python 时必须显式传入 `user_id`、`material_id`、`material_ids`、写作任务参数等业务上下文。
+- Python 返回结果后，Java 负责保存业务记录、调用日志和展示所需数据。
+
+## 前端调用边界
+
+- 前端只调用 Java 后端 API。
+- 不允许设计“前端直接调用 Python AI 服务”的接口链路。
+- Java 后端必须作为 AI 相关业务请求的统一入口。
+
+## 领域术语
+
+| 术语 | 含义 | 避免 |
+|---|---|---|
+| 材料 | 宣传文档的原始素材，由用户上传，由 Java 后端管理存储和元数据 | 资料、文档 |
+| 片段 | 材料经切分后生成的文本块，带有元数据，用于向量检索 | 分片、chunk |
+| 来源片段 | 一次检索命中并返回给写作任务或问答结果用于溯源展示的片段 | source、hit、检索结果 |
+| 写作任务 | 用户发起的一次内容生成请求 | 生成任务、请求 |
+| 问答 | 用户基于材料提出问题并请求大模型回答的一次交互 | ask、QA、提问接口 |
+| Prompt 模板 | 用于组装最终发送给大模型的模板 | 提示词模板、prompt |
+| 材料向量维护 | Java 后端为保持材料与片段一致而调用 Python 服务写入、替换或删除向量的能力 | 知识库 CRUD、材料 CRUD |
+
+说明：
+
+- 对外接口、菜单、表格、表单、DTO、VO、Service 命名，应尽量遵守这些术语。
+- 代码内部如需使用英文命名，应保持语义稳定。
+- 推荐英文命名：`material`、`segment`、`sourceSegment`、`writingTask`、`qa` 或 `questionAnswer`、`promptTemplate`、`materialVector`。
+
+## 包结构和模块约定
+
+当前代码根包为 `cn.ezios.baseapi`，主要结构如下：
+
+- `common`：通用枚举、异常、模型、工具。
+- `framework`：配置、全局异常处理、审计字段填充、操作日志。
+- `modules.auth`：登录认证与会话。
+- `modules.system`：系统管理，继承脚手架能力。
+
+推荐后续业务模块：
+
+| 模块 | 说明 |
+|---|---|
+| `system` | 系统管理，继承脚手架能力 |
+| `auth` | 登录认证与会话 |
+| `file` | 文件上传与文件记录，当前在 `system.file` 中继承脚手架能力，可按业务需要扩展 |
+| `material` | 材料主数据与材料处理状态 |
+| `writing` | 写作任务与写作结果 |
+| `qa` | 材料问答 |
+| `ai` | AI 调用记录、模型配置、Python 服务调用封装 |
+| `knowledge` | 片段、来源片段、材料向量维护记录，可根据实际情况合并到 `material` 或 `ai` 模块 |
+
+如果当前项目已经形成既定包结构，以当前风格为准，不要强行重构。
+
+## 数据库命名建议
+
+- 系统管理表继续使用 `sys_` 前缀。
+- 材料业务表建议使用 `material_` 前缀。
+- 写作任务表建议使用 `writing_` 前缀。
+- AI 调用、模型配置、调用日志建议使用 `ai_` 前缀。
+- 片段、来源片段、向量维护记录可使用 `kb_`、`material_` 或 `ai_` 前缀，但必须在文档中说明清楚。
+- 不要把新业务表全部塞进 `sys_` 前缀。
+- 主键优先使用 `BIGINT` 自增。
+- 业务删除优先使用逻辑删除。
+- 常用字段建议包含 `create_time`、`update_time`、`deleted`、`status` 等。
+- 是否使用外键应遵守当前项目脚手架风格；如果脚手架未使用外键，优先通过业务逻辑维护关系。
+
+## 禁止事项
+
+- 不要让 Python AI 服务直接访问 Java 业务数据库。
+- 不要让前端绕过 Java 后端直接调用 Python AI 服务。
+- 不要把 Java 后端只写成 Python 服务的简单转发层。
+- 不要把用户、权限、材料主数据、写作任务状态放到 Python 服务管理。
+- 不要把“材料”随意命名为 `document`、`resource`、`file`。
+- 不要把“片段”随意命名为 `chunk`。
+- 不要随意重构认证、权限、统一响应、统一异常、系统管理模块。
+- 不要破坏现有脚手架的基础能力。
+- 不要引入新依赖。
+- 不要新增业务功能代码，除非用户明确要求。
+
+## 开发前阅读顺序
+
+1. `README.md`
+2. `AGENTS.md`
+3. `docs/domain-language.md`
+4. `docs/backend-architecture.md`
+5. `docs/python-ai-service-contract.md`
+6. 当前任务相关源码
+
+如果任务涉及 issue、PRD、triage 或架构梳理技能，再阅读：
+
+- `docs/agents/issue-tracker.md`
+- `docs/agents/triage-labels.md`
+- `docs/agents/domain.md`
+
+## 通用编码行为准则
+
+### 先想清楚再编码
+
+- 不要假设，不要隐藏困惑。
+- 实现前明确说明假设；不确定时先问。
+- 如果存在多种解释，先呈现取舍，不要静默选择。
+- 如果更简单的方案能解决问题，应明确指出。
+
+### 简单优先
+
+- 不做超出需求的功能。
+- 不为单次使用代码抽象。
+- 不引入未被要求的灵活性或可配置性。
+- 能用少量代码解决时，不写复杂方案。
+
+### 先读项目文档
+
+涉及项目架构、后端模块、API 契约、数据库 schema、认证、权限、文件、日志、CORS、Knife4j / OpenAPI、校验、统一响应或统一异常处理时，先读相关文档和源码。
+
+### 外科手术式修改
+
+- 只改完成任务必须修改的内容。
+- 不顺手重构无关代码。
+- 匹配现有风格。
+- 清理自己改动造成的无用导入、变量、函数。
+- 不删除任务无关的既有死代码，最多在总结中说明。
+
+### 目标驱动执行
+
+多步骤任务应给出简短计划：
+
+```text
+1. [步骤] -> 验证：[检查]
+2. [步骤] -> 验证：[检查]
+3. [步骤] -> 验证：[检查]
+```
+
+## 任务完成后的总结要求
+
+每次完成开发或文档任务后，必须总结：
+
+1. 修改文件
+2. 实现内容
+3. 验证结果
+4. 未完成事项
+
+总结文档应写入 `docs` 目录。
