@@ -4,6 +4,7 @@ import cn.ezios.baseapi.common.enums.ResponseCode;
 import cn.ezios.baseapi.common.exception.BusinessException;
 import cn.ezios.baseapi.common.model.BatchIdsRequest;
 import cn.ezios.baseapi.common.model.PageResult;
+import cn.ezios.baseapi.framework.config.SystemProperties;
 import cn.ezios.baseapi.modules.ai.client.PythonAiClient;
 import cn.ezios.baseapi.modules.ai.client.PythonAiClientException;
 import cn.ezios.baseapi.modules.ai.dto.AiCallLogCreateRequest;
@@ -19,10 +20,13 @@ import cn.ezios.baseapi.modules.material.entity.BizMaterialProcessRecord;
 import cn.ezios.baseapi.modules.material.mapper.BizMaterialMapper;
 import cn.ezios.baseapi.modules.material.mapper.BizMaterialProcessRecordMapper;
 import cn.ezios.baseapi.modules.material.service.MaterialService;
+import cn.ezios.baseapi.modules.system.file.entity.SysFile;
+import cn.ezios.baseapi.modules.system.file.mapper.SysFileMapper;
 import cn.ezios.baseapi.modules.material.vo.MaterialVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -53,15 +57,21 @@ public class MaterialServiceImpl implements MaterialService {
     private final BizMaterialProcessRecordMapper processRecordMapper;
     private final PythonAiClient pythonAiClient;
     private final AiCallLogService aiCallLogService;
+    private final SystemProperties systemProperties;
+    private final SysFileMapper sysFileMapper;
 
     public MaterialServiceImpl(BizMaterialMapper materialMapper,
             BizMaterialProcessRecordMapper processRecordMapper,
             PythonAiClient pythonAiClient,
-            AiCallLogService aiCallLogService) {
+            AiCallLogService aiCallLogService,
+            SystemProperties systemProperties,
+            SysFileMapper sysFileMapper) {
         this.materialMapper = materialMapper;
         this.processRecordMapper = processRecordMapper;
         this.pythonAiClient = pythonAiClient;
         this.aiCallLogService = aiCallLogService;
+        this.systemProperties = systemProperties;
+        this.sysFileMapper = sysFileMapper;
     }
 
     @Override
@@ -69,6 +79,21 @@ public class MaterialServiceImpl implements MaterialService {
     public MaterialVO create(MaterialSaveRequest request) {
         BizMaterial material = new BizMaterial();
         BeanUtils.copyProperties(request, material);
+        if (request.getFileId() != null) {
+            SysFile file = sysFileMapper.selectById(request.getFileId());
+            if (file != null) {
+                material.setStoragePath(file.getStoragePath());
+                if (!StringUtils.hasText(material.getOriginalFilename())) {
+                    material.setOriginalFilename(file.getOriginalName());
+                }
+                if (material.getFileSize() == null) {
+                    material.setFileSize(file.getFileSize());
+                }
+                if (!StringUtils.hasText(material.getFileMd5())) {
+                    material.setFileMd5(file.getFileMd5());
+                }
+            }
+        }
         if (!StringUtils.hasText(material.getStatus())) {
             material.setStatus(DEFAULT_STATUS);
         }
@@ -198,7 +223,12 @@ public class MaterialServiceImpl implements MaterialService {
         if (!StringUtils.hasText(material.getStoragePath())) {
             throw new BusinessException("材料文件存储路径不能为空");
         }
-        FileSystemResource resource = new FileSystemResource(material.getStoragePath());
+        Path uploadRoot = Path.of(systemProperties.getFile().getUploadRoot()).toAbsolutePath().normalize();
+        Path fullPath = uploadRoot.resolve(material.getStoragePath()).normalize();
+        if (!fullPath.startsWith(uploadRoot)) {
+            throw new BusinessException("非法文件路径");
+        }
+        FileSystemResource resource = new FileSystemResource(fullPath);
         if (!resource.exists() || !resource.isReadable()) {
             throw new BusinessException("材料文件不存在或不可读");
         }

@@ -1,5 +1,24 @@
 spring:
+  profiles:
+    active: local
   datasource:
     url: jdbc:mysql:///base_api?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: root123456
+
+system:
+  default-password: admin123
+  file:
+    upload-root: ${user.home}/uploads
+
+sa-token:
+  token-name: Authorization
+  token-prefix: Bearer
+  timeout: 7200
+  active-timeout: -1
+  is-concurrent: true
+  is-share: false
+  is-read-header: true
+  is-read-body: false
+  is-read-cookie: false
+  auto-renew: true
