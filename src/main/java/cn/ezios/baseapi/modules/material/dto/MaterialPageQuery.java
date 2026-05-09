@@ -8,8 +8,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class MaterialPageQuery extends PageQuery {
 
-    private Long userId;
-
     private String title;
 
     private Long fileId;

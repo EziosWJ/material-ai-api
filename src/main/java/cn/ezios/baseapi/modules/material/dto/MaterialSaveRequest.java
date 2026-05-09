@@ -8,9 +8,6 @@ import lombok.Data;
 @Data
 public class MaterialSaveRequest {
 
-    @NotNull(message = "所属用户不能为空")
-    private Long userId;
-
     @NotBlank(message = "材料标题不能为空")
     @Size(max = 200, message = "材料标题长度不能超过 200")
     private String title;

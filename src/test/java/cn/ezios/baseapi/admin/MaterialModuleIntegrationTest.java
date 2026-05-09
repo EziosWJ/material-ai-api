@@ -83,7 +83,6 @@ class MaterialModuleIntegrationTest {
 
         String body = """
                 {
-                    "userId": 1,
                     "title": "集成测试材料",
                     "originalFilename": "%s",
                     "fileId": %d,
@@ -118,7 +117,6 @@ class MaterialModuleIntegrationTest {
 
         String body = """
                 {
-                    "userId": 1,
                     "originalFilename": "test.txt",
                     "fileId": %d,
                     "storagePath": "/tmp/test.txt"
@@ -141,7 +139,6 @@ class MaterialModuleIntegrationTest {
 
         String body = """
                 {
-                    "userId": 1,
                     "title": "缺少文件ID",
                     "originalFilename": "test.txt",
                     "storagePath": "/tmp/test.txt"
@@ -250,7 +247,7 @@ class MaterialModuleIntegrationTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.id").value(id))
                 .andExpect(jsonPath("$.data.title").value("集成测试材料"))
-                .andExpect(jsonPath("$.data.userId").value(1))
+                .andExpect(jsonPath("$.data.userId").isNumber())
                 .andExpect(jsonPath("$.data.status").exists())
                 .andExpect(jsonPath("$.data.segmentCount").isNumber());
     }
@@ -308,7 +305,6 @@ class MaterialModuleIntegrationTest {
         // 创建一个专门用于删除的材料
         String body = """
                 {
-                    "userId": 1,
                     "title": "待删除材料",
                     "originalFilename": "%s",
                     "fileId": %d,
@@ -525,7 +521,6 @@ class MaterialModuleIntegrationTest {
     private long createMaterialDirectly(String token, String title) throws Exception {
         String body = """
                 {
-                    "userId": 1,
                     "title": "%s",
                     "originalFilename": "%s",
                     "fileId": %d,

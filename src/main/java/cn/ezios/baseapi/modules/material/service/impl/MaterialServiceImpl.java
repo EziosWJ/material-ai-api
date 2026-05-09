@@ -35,6 +35,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import cn.dev33.satoken.stp.StpUtil;
 import org.springframework.util.StringUtils;
 
 @Service
@@ -79,6 +80,7 @@ public class MaterialServiceImpl implements MaterialService {
     public MaterialVO create(MaterialSaveRequest request) {
         BizMaterial material = new BizMaterial();
         BeanUtils.copyProperties(request, material);
+        material.setUserId(StpUtil.getLoginIdAsLong());
         if (request.getFileId() != null) {
             SysFile file = sysFileMapper.selectById(request.getFileId());
             if (file != null) {
@@ -106,7 +108,7 @@ public class MaterialServiceImpl implements MaterialService {
     public PageResult<MaterialVO> page(MaterialPageQuery query) {
         Page<BizMaterial> page = materialMapper.selectPage(Page.of(query.getPage(), query.getPageSize()),
                 new LambdaQueryWrapper<BizMaterial>()
-                        .eq(query.getUserId() != null, BizMaterial::getUserId, query.getUserId())
+                        .eq(BizMaterial::getUserId, StpUtil.getLoginIdAsLong())
                         .like(StringUtils.hasText(query.getTitle()), BizMaterial::getTitle, query.getTitle())
                         .eq(query.getFileId() != null, BizMaterial::getFileId, query.getFileId())
                         .eq(StringUtils.hasText(query.getFileType()), BizMaterial::getFileType, query.getFileType())
@@ -225,7 +227,7 @@ public class MaterialServiceImpl implements MaterialService {
         }
         Path uploadRoot = Path.of(systemProperties.getFile().getUploadRoot()).toAbsolutePath().normalize();
         Path fullPath = uploadRoot.resolve(material.getStoragePath()).normalize();
-        if (!fullPath.startsWith(uploadRoot)) {
+         if (!fullPath.startsWith(uploadRoot)) {
             throw new BusinessException("非法文件路径");
         }
         FileSystemResource resource = new FileSystemResource(fullPath);
