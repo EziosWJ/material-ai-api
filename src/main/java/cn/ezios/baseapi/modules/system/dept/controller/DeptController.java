@@ -24,12 +24,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 部门管理控制器
+ * <p>提供部门的树形查询、分页查询、增删改查及状态管理接口</p>
+ */
 @Tag(name = "部门管理")
 @Validated
 @RestController
 @RequestMapping("/api/system/dept")
 public class DeptController {
 
+    /** 部门管理服务 */
     private final DeptService deptService;
 
     public DeptController(DeptService deptService) {

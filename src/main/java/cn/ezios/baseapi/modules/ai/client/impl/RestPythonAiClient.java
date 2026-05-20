@@ -33,6 +33,11 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+/**
+ * Python AI 服务客户端的 REST 实现。
+ * <p>通过 {@link RestClient} 调用 Python AI 服务的各接口，并将 Python 侧的响应格式转换为 Java 业务 DTO。
+ * 内部定义了与 Python 服务通信的 Wire 类，负责字段映射和类型转换。</p>
+ */
 @Component
 public class RestPythonAiClient implements PythonAiClient {
 
@@ -41,6 +46,7 @@ public class RestPythonAiClient implements PythonAiClient {
     private static final String ENDPOINT_GENERATE = "/generate";
     private static final String ENDPOINT_ASK = "/ask";
 
+    /** 预配置的 RestClient，已绑定 Python AI 服务基础 URL */
     private final RestClient pythonAiRestClient;
     private final ObjectMapper objectMapper;
 
@@ -163,6 +169,7 @@ public class RestPythonAiClient implements PythonAiClient {
         });
     }
 
+    /** 校验内容生成请求参数 */
     private void validateGenerateRequest(PythonAiGenerateRequest request) {
         if (request == null) {
             throw new BusinessException("生成请求不能为空");
@@ -181,6 +188,7 @@ public class RestPythonAiClient implements PythonAiClient {
         validateTopK(request.getTopK());
     }
 
+    /** 校验问答请求参数 */
     private void validateAskRequest(PythonAiAskRequest request) {
         if (request == null) {
             throw new BusinessException("问答请求不能为空");
@@ -211,6 +219,7 @@ public class RestPythonAiClient implements PythonAiClient {
         }
     }
 
+    /** 将生成请求转换为 Python 服务所需的请求体 */
     private Map<String, Object> toGenerateBody(PythonAiGenerateRequest request) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("type", request.getType());
@@ -222,6 +231,7 @@ public class RestPythonAiClient implements PythonAiClient {
         return body;
     }
 
+    /** 将问答请求转换为 Python 服务所需的请求体 */
     private Map<String, Object> toAskBody(PythonAiAskRequest request) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("query", request.getQuery());
@@ -250,6 +260,7 @@ public class RestPythonAiClient implements PythonAiClient {
         return ids.stream().map(String::valueOf).toList();
     }
 
+    /** 将 Python 服务的来源片段 Wire 对象转换为业务 DTO */
     private List<PythonAiSourceSegment> toSourceSegments(List<PythonSourceSegmentWireResponse> sources) {
         if (sources == null) {
             return List.of();
@@ -283,6 +294,7 @@ public class RestPythonAiClient implements PythonAiClient {
         return value == null || value < 0 ? null : value;
     }
 
+    /** 统一执行 Python AI 调用，将 RestClientException 包装为 PythonAiClientException */
     private <T> T execute(PythonAiCall<T> call) {
         try {
             return call.invoke();
@@ -293,6 +305,7 @@ public class RestPythonAiClient implements PythonAiClient {
         }
     }
 
+    /** 解析 Python 服务的错误响应并转换为 PythonAiClientException */
     private PythonAiClientException toClientException(ClientHttpResponse response) throws IOException {
         String body = StreamUtils.copyToString(response.getBody(), StandardCharsets.UTF_8);
         PythonAiErrorResponse error = parseError(body);
@@ -314,12 +327,14 @@ public class RestPythonAiClient implements PythonAiClient {
         }
     }
 
+    /** Python AI 调用的函数式接口，用于统一异常处理 */
     @FunctionalInterface
     private interface PythonAiCall<T> {
 
         T invoke();
     }
 
+    /** Python 健康检查接口的 Wire 响应 */
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
     private static class PythonHealthWireResponse {
@@ -329,6 +344,7 @@ public class RestPythonAiClient implements PythonAiClient {
         private String detail;
     }
 
+    /** Python 材料处理接口的 Wire 响应 */
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
     private static class PythonMaterialProcessWireResponse {
@@ -340,6 +356,7 @@ public class RestPythonAiClient implements PythonAiClient {
         private Integer chunkCount;
     }
 
+    /** Python 向量删除接口的 Wire 响应 */
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
     private static class PythonVectorDeleteWireResponse {
@@ -348,6 +365,7 @@ public class RestPythonAiClient implements PythonAiClient {
         private Integer deletedCount;
     }
 
+    /** Python 内容生成接口的 Wire 响应 */
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
     private static class PythonGenerateWireResponse {
@@ -358,6 +376,7 @@ public class RestPythonAiClient implements PythonAiClient {
         private List<PythonSourceSegmentWireResponse> sources;
     }
 
+    /** Python 问答接口的 Wire 响应 */
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
     private static class PythonAskWireResponse {
@@ -367,6 +386,7 @@ public class RestPythonAiClient implements PythonAiClient {
         private List<PythonSourceSegmentWireResponse> sources;
     }
 
+    /** Python 来源片段的 Wire 响应，使用 snake_case 字段名 */
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Data
     private static class PythonSourceSegmentWireResponse {

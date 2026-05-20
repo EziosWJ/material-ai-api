@@ -9,6 +9,10 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
 import lombok.Data;
 
+/**
+ * 材料主数据实体
+ * <p>对应数据库表 biz_material，存储用户上传的宣传素材元数据及处理状态</p>
+ */
 @Data
 @TableName("biz_material")
 public class BizMaterial {

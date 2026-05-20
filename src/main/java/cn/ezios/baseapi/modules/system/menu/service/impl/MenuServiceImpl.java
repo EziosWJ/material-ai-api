@@ -26,15 +26,29 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+/**
+ * 菜单管理服务实现
+ * <p>提供菜单的树形查询、分页查询及增删改查等功能</p>
+ */
 @Service
 public class MenuServiceImpl implements MenuService {
 
+    /** 顶级菜单父ID */
     private static final long ROOT_PARENT_ID = 0L;
+
+    /** 启用状态 */
     private static final int STATUS_ENABLED = 1;
+
+    /** 可见状态 */
     private static final int VISIBLE = 1;
+
+    /** 内置菜单标志 */
     private static final int BUILTIN = 1;
 
+    /** 菜单数据访问 */
     private final SysMenuMapper menuMapper;
+
+    /** 角色菜单关联数据访问（用于校验菜单是否绑定角色） */
     private final SysRoleMenuMapper roleMenuMapper;
 
     public MenuServiceImpl(SysMenuMapper menuMapper, SysRoleMenuMapper roleMenuMapper) {
@@ -130,6 +144,9 @@ public class MenuServiceImpl implements MenuService {
         menuMapper.updateById(menu);
     }
 
+    /**
+     * 根据ID获取菜单，不存在则抛出异常
+     */
     private SysMenu requireMenu(Long id) {
         SysMenu menu = menuMapper.selectById(id);
         if (menu == null) {
@@ -138,6 +155,9 @@ public class MenuServiceImpl implements MenuService {
         return menu;
     }
 
+    /**
+     * 校验权限编码唯一性
+     */
     private void ensurePermissionUnique(String permissionCode, Long excludeId) {
         if (!StringUtils.hasText(permissionCode)) {
             return;
@@ -150,18 +170,27 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
+    /**
+     * 校验菜单是否存在子菜单
+     */
     private void assertNoChildren(Long id) {
         if (menuMapper.selectCount(new LambdaQueryWrapper<SysMenu>().eq(SysMenu::getParentId, id)) > 0) {
             throw new BusinessException("存在子菜单，禁止删除");
         }
     }
 
+    /**
+     * 校验菜单是否绑定角色
+     */
     private void assertNoRoleBinding(Long id) {
         if (roleMenuMapper.selectCount(new LambdaQueryWrapper<SysRoleMenu>().eq(SysRoleMenu::getMenuId, id)) > 0) {
             throw new BusinessException("菜单已绑定角色，禁止删除");
         }
     }
 
+    /**
+     * 构建菜单树形结构
+     */
     private List<MenuVO> buildTree(List<MenuVO> menus) {
         Map<Long, MenuVO> menuMap = new LinkedHashMap<>();
         for (MenuVO menu : menus) {
@@ -180,6 +209,9 @@ public class MenuServiceImpl implements MenuService {
         return roots;
     }
 
+    /**
+     * 递归排序菜单树
+     */
     private void sortTree(List<MenuVO> menus) {
         menus.sort(Comparator.comparing(MenuVO::getSortOrder, Comparator.nullsLast(Integer::compareTo))
                 .thenComparing(MenuVO::getId, Comparator.nullsLast(Long::compareTo)));
@@ -188,6 +220,9 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
+    /**
+     * 实体转VO
+     */
     private MenuVO toVO(SysMenu menu) {
         MenuVO vo = new MenuVO();
         BeanUtils.copyProperties(menu, vo);

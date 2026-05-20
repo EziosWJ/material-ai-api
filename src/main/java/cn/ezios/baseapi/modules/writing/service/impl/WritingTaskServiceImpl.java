@@ -44,17 +44,25 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+/**
+ * 写作任务服务实现，负责任务生命周期管理、材料校验、AI 调用、结果持久化和调用审计。
+ */
 @Service
 public class WritingTaskServiceImpl implements WritingTaskService {
 
+    /** 支持的写作类型 */
     private static final Set<String> SUPPORTED_WRITING_TYPES = Set.of("outline", "draft", "polished", "title");
+    /** AI 调用业务类型标识 */
     private static final String BUSINESS_TYPE_WRITING = "writing";
+    /** AI 服务生成接口路径 */
     private static final String ENDPOINT_GENERATE = "/generate";
     private static final String STATUS_PENDING = "pending";
     private static final String STATUS_RUNNING = "running";
     private static final String STATUS_SUCCESS = "success";
     private static final String STATUS_FAILED = "failed";
+    /** 材料可用状态 */
     private static final String MATERIAL_STATUS_AVAILABLE = "available";
+    /** 首次生成的版本号 */
     private static final int FIRST_VERSION = 1;
 
     private final BizWritingTaskMapper taskMapper;

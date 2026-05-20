@@ -16,12 +16,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 登录日志控制器
+ * <p>提供登录日志的查询和清空接口</p>
+ */
 @Tag(name = "登录日志")
 @Validated
 @RestController
 @RequestMapping("/api/system/login-log")
 public class LoginLogController {
 
+    /** 日志服务 */
     private final LogService logService;
 
     public LoginLogController(LogService logService) {

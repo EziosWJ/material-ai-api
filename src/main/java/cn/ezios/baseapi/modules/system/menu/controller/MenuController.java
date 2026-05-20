@@ -24,12 +24,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 菜单管理控制器
+ * <p>提供菜单的树形查询、分页查询、增删改查及状态管理接口</p>
+ */
 @Tag(name = "菜单管理")
 @Validated
 @RestController
 @RequestMapping("/api/system/menu")
 public class MenuController {
 
+    /** 菜单管理服务 */
     private final MenuService menuService;
 
     public MenuController(MenuService menuService) {

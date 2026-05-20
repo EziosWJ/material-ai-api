@@ -35,12 +35,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * 文件管理控制器
+ * <p>提供文件上传、下载、预览、分页查询及管理接口</p>
+ */
 @Tag(name = "文件管理")
 @Validated
 @RestController
 @RequestMapping("/api/system/file")
 public class FileController {
 
+    /** 文件管理服务 */
     private final FileService fileService;
 
     public FileController(FileService fileService) {

@@ -8,10 +8,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * SpringDoc OpenAPI / Knife4j 接口文档配置。
+ * <p>按业务模块对 API 进行分组，便于前端查看各模块接口文档。仅在 {@code springdoc.api-docs.enabled=true} 时生效。</p>
+ */
 @Configuration
 @ConditionalOnProperty(prefix = "springdoc.api-docs", name = "enabled", havingValue = "true")
 public class OpenApiConfig {
 
+    /** 各分组名称与其对应的路径匹配规则映射 */
     private static final Map<String, String[]> GROUP_PATHS = Map.of(
             "认证", new String[]{"/api/auth/**"},
             "用户", new String[]{"/api/system/user/**"},
@@ -23,6 +28,11 @@ public class OpenApiConfig {
             "文件", new String[]{"/api/system/file/**"}
     );
 
+    /**
+     * 配置 OpenAPI 基本信息（标题、版本）。
+     *
+     * @return OpenAPI 元信息实例
+     */
     @Bean
     public OpenAPI baseOpenApi() {
         return new OpenAPI().info(new Info()
@@ -70,6 +80,12 @@ public class OpenApiConfig {
         return group("文件");
     }
 
+    /**
+     * 根据分组名构建 GroupedOpenApi 实例。
+     *
+     * @param groupName 分组名称，需在 {@link #GROUP_PATHS} 中存在对应配置
+     * @return 分组 OpenAPI 实例
+     */
     private GroupedOpenApi group(String groupName) {
         return GroupedOpenApi.builder()
                 .group(groupName)

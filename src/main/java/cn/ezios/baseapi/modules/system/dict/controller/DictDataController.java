@@ -22,12 +22,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 字典数据管理控制器
+ * <p>提供字典数据项的增删改查接口</p>
+ */
 @Tag(name = "字典数据")
 @Validated
 @RestController
 @RequestMapping("/api/system/dict-data")
 public class DictDataController {
 
+    /** 字典服务 */
     private final DictService dictService;
 
     public DictDataController(DictService dictService) {

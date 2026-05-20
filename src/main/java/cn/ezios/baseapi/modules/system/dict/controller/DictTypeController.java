@@ -23,12 +23,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 字典类型管理控制器
+ * <p>提供字典类型的增删改查及状态管理接口</p>
+ */
 @Tag(name = "字典类型")
 @Validated
 @RestController
 @RequestMapping("/api/system/dict-type")
 public class DictTypeController {
 
+    /** 字典服务 */
     private final DictService dictService;
 
     public DictTypeController(DictService dictService) {

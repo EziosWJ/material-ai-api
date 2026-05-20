@@ -16,12 +16,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 操作日志控制器
+ * <p>提供操作日志的查询和清空接口</p>
+ */
 @Tag(name = "操作日志")
 @Validated
 @RestController
 @RequestMapping("/api/system/oper-log")
 public class OperLogController {
 
+    /** 日志服务 */
     private final LogService logService;
 
     public OperLogController(LogService logService) {

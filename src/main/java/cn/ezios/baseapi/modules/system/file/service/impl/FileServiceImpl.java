@@ -35,14 +35,26 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * 文件管理服务实现
+ * <p>提供文件上传到本地存储、下载、预览及管理功能</p>
+ */
 @Service
 public class FileServiceImpl implements FileService {
 
+    /** 启用状态 */
     private static final int STATUS_ENABLED = 1;
+
+    /** 最大文件大小：50MB */
     private static final long MAX_FILE_SIZE = 50L * 1024 * 1024;
+
+    /** 日期路径格式化器 */
     private static final DateTimeFormatter DATE_PATH_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
+    /** 文件数据访问 */
     private final SysFileMapper fileMapper;
+
+    /** 系统配置 */
     private final SystemProperties systemProperties;
 
     public FileServiceImpl(SysFileMapper fileMapper, SystemProperties systemProperties) {
@@ -183,6 +195,9 @@ public class FileServiceImpl implements FileService {
         return new FileResource(loadResource(file), file.getOriginalName(), file.getMimeType());
     }
 
+    /**
+     * 根据ID获取文件，不存在则抛出异常
+     */
     private SysFile requireFile(Long id) {
         SysFile file = fileMapper.selectById(id);
         if (file == null) {
@@ -191,6 +206,9 @@ public class FileServiceImpl implements FileService {
         return file;
     }
 
+    /**
+     * 加载文件资源（带路径安全校验）
+     */
     private Resource loadResource(SysFile file) {
         try {
             Path uploadRoot = Path.of(systemProperties.getFile().getUploadRoot()).toAbsolutePath().normalize();
@@ -208,6 +226,9 @@ public class FileServiceImpl implements FileService {
         }
     }
 
+    /**
+     * 计算文件MD5摘要
+     */
     private String md5(MultipartFile file) {
         try (InputStream inputStream = file.getInputStream()) {
             return SecureUtil.md5(inputStream);
@@ -216,6 +237,9 @@ public class FileServiceImpl implements FileService {
         }
     }
 
+    /**
+     * 实体转VO
+     */
     private FileVO toVO(SysFile file) {
         FileVO vo = new FileVO();
         BeanUtils.copyProperties(file, vo);

@@ -7,9 +7,19 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+/**
+ * 菜单数据访问层
+ * <p>提供 sys_menu 表的基本 CRUD 操作及自定义查询</p>
+ */
 @Mapper
 public interface SysMenuMapper extends BaseMapper<SysMenu> {
 
+    /**
+     * 查询用户可见的菜单列表（通过角色关联）
+     *
+     * @param userId 用户ID
+     * @return 用户可见的菜单列表
+     */
     @Select("""
             SELECT DISTINCT m.id, m.parent_id, m.menu_name, m.menu_type, m.path,
                    m.component, m.external_url, m.icon, m.permission_code, m.sort_order,

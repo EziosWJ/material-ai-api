@@ -38,6 +38,18 @@ import org.springframework.transaction.annotation.Transactional;
 import cn.dev33.satoken.stp.StpUtil;
 import org.springframework.util.StringUtils;
 
+/**
+ * 材料业务服务实现
+ * <p>
+ * 核心职责：
+ * <ul>
+ *   <li>材料主数据的增删改查</li>
+ *   <li>调用 Python AI 服务进行材料处理（片段切分、向量化）</li>
+ *   <li>调用 Python AI 服务删除材料向量</li>
+ *   <li>记录材料处理记录和 AI 调用日志</li>
+ * </ul>
+ * </p>
+ */
 @Service
 public class MaterialServiceImpl implements MaterialService {
 
@@ -75,6 +87,10 @@ public class MaterialServiceImpl implements MaterialService {
         this.sysFileMapper = sysFileMapper;
     }
 
+    /**
+     * 创建材料记录
+     * <p>从关联的文件记录中补充缺失的文件信息（存储路径、原始文件名、文件大小、MD5）</p>
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public MaterialVO create(MaterialSaveRequest request) {
@@ -138,6 +154,17 @@ public class MaterialServiceImpl implements MaterialService {
         materialMapper.updateById(material);
     }
 
+    /**
+     * 处理材料：调用 Python AI 服务进行片段切分和向量化
+     * <p>
+     * 处理流程：
+     * 1. 更新材料状态为 processing
+     * 2. 解析文件路径并调用 Python 服务
+     * 3. 成功：更新状态为 available，记录片段数
+     * 4. 失败：更新状态为 failed，记录错误信息
+     * 5. 记录处理记录和 AI 调用日志
+     * </p>
+     */
     @Override
     public MaterialVO process(Long id, MaterialProcessRequest request) {
         BizMaterial material = requireMaterial(id);
@@ -175,6 +202,10 @@ public class MaterialServiceImpl implements MaterialService {
         }
     }
 
+    /**
+     * 删除材料的向量数据
+     * <p>调用 Python AI 服务删除指定材料的所有向量，不影响材料主数据</p>
+     */
     @Override
     public void deleteMaterialVectors(Long id) {
         BizMaterial material = requireMaterial(id);
@@ -221,6 +252,10 @@ public class MaterialServiceImpl implements MaterialService {
         return material;
     }
 
+    /**
+     * 将材料的存储路径转换为文件资源
+     * <p>包含路径遍历防护：确保解析后的路径在上传根目录下</p>
+     */
     private Resource toFileResource(BizMaterial material) {
         if (!StringUtils.hasText(material.getStoragePath())) {
             throw new BusinessException("材料文件存储路径不能为空");

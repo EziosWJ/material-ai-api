@@ -27,15 +27,29 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+/**
+ * 角色管理服务实现
+ * <p>提供角色的增删改查、状态管理及菜单分配等功能</p>
+ */
 @Service
 public class RoleServiceImpl implements RoleService {
 
+    /** 启用状态 */
     private static final int STATUS_ENABLED = 1;
+
+    /** 内置角色标志 */
     private static final int BUILTIN = 1;
 
+    /** 角色数据访问 */
     private final SysRoleMapper roleMapper;
+
+    /** 角色菜单关联数据访问 */
     private final SysRoleMenuMapper roleMenuMapper;
+
+    /** 用户角色关联数据访问（用于校验角色是否绑定用户） */
     private final SysUserRoleMapper userRoleMapper;
+
+    /** 菜单数据访问（用于校验菜单是否存在） */
     private final SysMenuMapper menuMapper;
 
     public RoleServiceImpl(SysRoleMapper roleMapper,
@@ -147,6 +161,9 @@ public class RoleServiceImpl implements RoleService {
         }
     }
 
+    /**
+     * 根据ID获取角色，不存在则抛出异常
+     */
     private SysRole requireRole(Long id) {
         SysRole role = roleMapper.selectById(id);
         if (role == null) {
@@ -155,6 +172,9 @@ public class RoleServiceImpl implements RoleService {
         return role;
     }
 
+    /**
+     * 校验角色编码唯一性
+     */
     private void ensureRoleCodeUnique(String roleCode, Long excludeId) {
         Long count = roleMapper.selectCount(new LambdaQueryWrapper<SysRole>()
                 .eq(SysRole::getRoleCode, roleCode)
@@ -164,6 +184,9 @@ public class RoleServiceImpl implements RoleService {
         }
     }
 
+    /**
+     * 实体转VO
+     */
     private RoleVO toVO(SysRole role) {
         RoleVO vo = new RoleVO();
         BeanUtils.copyProperties(role, vo);
@@ -181,6 +204,9 @@ public class RoleServiceImpl implements RoleService {
                 .toList();
     }
 
+    /**
+     * 安全处理ID列表（去重、防空）
+     */
     private List<Long> safeIds(List<Long> ids) {
         return ids == null ? Collections.emptyList() : ids.stream().distinct().toList();
     }

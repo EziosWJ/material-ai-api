@@ -20,11 +20,20 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+/**
+ * 日志管理服务实现
+ * <p>提供登录日志和操作日志的查询及清空功能</p>
+ */
 @Service
 public class LogServiceImpl implements LogService {
 
+    /** 登录日志数据访问 */
     private final SysLoginLogMapper loginLogMapper;
+
+    /** 操作日志数据访问 */
     private final SysOperLogMapper operLogMapper;
+
+    /** 系统配置（用于判断是否允许清空日志） */
     private final SystemProperties systemProperties;
 
     public LogServiceImpl(SysLoginLogMapper loginLogMapper,
@@ -92,18 +101,27 @@ public class LogServiceImpl implements LogService {
         operLogMapper.delete(new QueryWrapper<>());
     }
 
+    /**
+     * 校验是否允许清空日志
+     */
     private void assertClearEnabled() {
         if (!systemProperties.isLogClearEnabled()) {
             throw new BusinessException(ResponseCode.FORBIDDEN);
         }
     }
 
+    /**
+     * 登录日志实体转VO
+     */
     private LoginLogVO toLoginVO(SysLoginLog log) {
         LoginLogVO vo = new LoginLogVO();
         BeanUtils.copyProperties(log, vo);
         return vo;
     }
 
+    /**
+     * 操作日志实体转VO
+     */
     private OperLogVO toOperVO(SysOperLog log) {
         OperLogVO vo = new OperLogVO();
         BeanUtils.copyProperties(log, vo);

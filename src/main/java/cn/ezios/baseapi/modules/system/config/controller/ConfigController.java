@@ -24,36 +24,65 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 系统配置管理控制器
+ * <p>提供系统参数配置的增删改查及状态管理接口</p>
+ */
 @Tag(name = "配置管理")
 @Validated
 @RestController
 @RequestMapping("/api/system/config")
 public class ConfigController {
 
+    /** 配置管理服务 */
     private final ConfigService configService;
 
     public ConfigController(ConfigService configService) {
         this.configService = configService;
     }
 
+    /**
+     * 配置分页查询
+     *
+     * @param query 分页查询条件
+     * @return 分页结果
+     */
     @Operation(summary = "配置分页")
     @GetMapping("/page")
     public ApiResponse<PageResult<ConfigVO>> page(@Valid ConfigPageQuery query) {
         return ApiResponse.success(configService.page(query));
     }
 
+    /**
+     * 获取配置详情
+     *
+     * @param id 配置ID
+     * @return 配置详情
+     */
     @Operation(summary = "配置详情")
     @GetMapping("/{id}")
     public ApiResponse<ConfigVO> detail(@PathVariable Long id) {
         return ApiResponse.success(configService.getDetail(id));
     }
 
+    /**
+     * 按配置键查询配置值
+     *
+     * @param configKey 配置键
+     * @return 配置信息
+     */
     @Operation(summary = "按配置键查询")
     @GetMapping("/key/{configKey}")
     public ApiResponse<ConfigByKeyVO> getByKey(@PathVariable String configKey) {
         return ApiResponse.success(configService.getByKey(configKey));
     }
 
+    /**
+     * 新增配置
+     *
+     * @param request 配置保存请求
+     * @return 操作结果
+     */
     @OperLog(title = "配置管理", type = "CREATE")
     @Operation(summary = "新增配置")
     @PostMapping
@@ -62,6 +91,13 @@ public class ConfigController {
         return ApiResponse.success();
     }
 
+    /**
+     * 修改配置
+     *
+     * @param id      配置ID
+     * @param request 配置保存请求
+     * @return 操作结果
+     */
     @OperLog(title = "配置管理", type = "UPDATE")
     @Operation(summary = "修改配置")
     @PutMapping("/{id}")
@@ -70,6 +106,12 @@ public class ConfigController {
         return ApiResponse.success();
     }
 
+    /**
+     * 删除配置
+     *
+     * @param id 配置ID
+     * @return 操作结果
+     */
     @OperLog(title = "配置管理", type = "DELETE")
     @Operation(summary = "删除配置")
     @DeleteMapping("/{id}")
@@ -78,6 +120,12 @@ public class ConfigController {
         return ApiResponse.success();
     }
 
+    /**
+     * 批量删除配置
+     *
+     * @param request 包含配置ID列表的请求
+     * @return 操作结果
+     */
     @OperLog(title = "配置管理", type = "DELETE")
     @Operation(summary = "批量删除配置")
     @PostMapping("/batch-delete")
@@ -86,6 +134,13 @@ public class ConfigController {
         return ApiResponse.success();
     }
 
+    /**
+     * 修改配置状态
+     *
+     * @param id      配置ID
+     * @param request 状态更新请求
+     * @return 操作结果
+     */
     @OperLog(title = "配置管理", type = "UPDATE")
     @Operation(summary = "修改配置状态")
     @PatchMapping("/{id}/status")

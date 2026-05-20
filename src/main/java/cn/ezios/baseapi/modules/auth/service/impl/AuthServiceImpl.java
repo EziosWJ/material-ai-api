@@ -36,10 +36,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+/**
+ * 认证服务实现，负责用户登录校验、会话管理、当前用户信息组装和菜单树构建。
+ */
 @Service
 public class AuthServiceImpl implements AuthService {
 
+    /** 用户启用状态 */
     private static final int STATUS_ENABLED = 1;
+    /** 根级菜单的父 ID */
     private static final long ROOT_PARENT_ID = 0L;
     private static final String LOGIN_SUCCESS = "SUCCESS";
     private static final String LOGIN_FAIL = "FAIL";
@@ -65,6 +70,9 @@ public class AuthServiceImpl implements AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * 用户登录：校验用户名、状态、密码，通过后创建会话并记录登录日志。
+     */
     @Override
     public LoginTokenVO login(LoginRequest request, HttpServletRequest servletRequest) {
         String loginIp = IpUtil.getClientIp(servletRequest);
@@ -98,11 +106,13 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
+    /** 退出登录，清除 Sa-Token 会话。 */
     @Override
     public void logout() {
         StpUtil.logout();
     }
 
+    /** 获取当前登录用户的完整信息，包括部门和已启用角色。 */
     @Override
     public AuthUserVO getCurrentUser() {
         SysUser user = requireCurrentUser();
@@ -122,6 +132,7 @@ public class AuthServiceImpl implements AuthService {
         return vo;
     }
 
+    /** 获取当前用户可见菜单，并构建树形结构。 */
     @Override
     public List<AuthMenuVO> getCurrentUserMenus() {
         Long userId = StpUtil.getLoginIdAsLong();
@@ -132,6 +143,7 @@ public class AuthServiceImpl implements AuthService {
         return buildMenuTree(menus);
     }
 
+    /** 获取当前登录用户，不存在则抛出异常。 */
     private SysUser requireCurrentUser() {
         Long userId = StpUtil.getLoginIdAsLong();
         SysUser user = userMapper.selectById(userId);
@@ -141,6 +153,7 @@ public class AuthServiceImpl implements AuthService {
         return user;
     }
 
+    /** 将部门 ID 转换为部门 VO。 */
     private AuthDeptVO toDeptVO(Long deptId) {
         if (deptId == null) {
             return null;
@@ -156,6 +169,7 @@ public class AuthServiceImpl implements AuthService {
         return vo;
     }
 
+    /** 将角色实体转换为角色 VO。 */
     private AuthRoleVO toRoleVO(SysRole role) {
         AuthRoleVO vo = new AuthRoleVO();
         vo.setId(role.getId());
@@ -164,6 +178,7 @@ public class AuthServiceImpl implements AuthService {
         return vo;
     }
 
+    /** 将菜单实体转换为菜单 VO。 */
     private AuthMenuVO toMenuVO(SysMenu menu) {
         AuthMenuVO vo = new AuthMenuVO();
         vo.setId(menu.getId());
@@ -179,6 +194,7 @@ public class AuthServiceImpl implements AuthService {
         return vo;
     }
 
+    /** 将扁平菜单列表构建为树形结构。 */
     private List<AuthMenuVO> buildMenuTree(List<AuthMenuVO> menus) {
         Map<Long, AuthMenuVO> menuMap = new LinkedHashMap<>();
         for (AuthMenuVO menu : menus) {
@@ -198,6 +214,7 @@ public class AuthServiceImpl implements AuthService {
         return roots;
     }
 
+    /** 递归对菜单树按排序值排序。 */
     private void sortMenus(List<AuthMenuVO> menus) {
         menus.sort(menuComparator());
         for (AuthMenuVO menu : menus) {
@@ -205,11 +222,13 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    /** 菜单排序比较器：先按 sortOrder，再按 id。 */
     private Comparator<AuthMenuVO> menuComparator() {
         return Comparator.comparing(AuthMenuVO::getSortOrder, Comparator.nullsLast(Integer::compareTo))
                 .thenComparing(AuthMenuVO::getId, Comparator.nullsLast(Long::compareTo));
     }
 
+    /** 记录登录日志，无论成功或失败均会写入。 */
     private void recordLoginLog(String username,
                                 String status,
                                 String loginIp,
@@ -225,6 +244,7 @@ public class AuthServiceImpl implements AuthService {
         loginLogMapper.insert(loginLog);
     }
 
+    /** 为 Token 值添加配置的前缀（如 Bearer）。 */
     private String withTokenPrefix(String tokenValue) {
         String tokenPrefix = SaManager.getConfig().getTokenPrefix();
         if (!StringUtils.hasText(tokenPrefix)) {

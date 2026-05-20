@@ -37,18 +37,38 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+/**
+ * 用户管理服务实现
+ * <p>提供用户的增删改查、状态管理、角色分配、密码管理等功能</p>
+ */
 @Service
 public class UserServiceImpl implements UserService {
 
+    /** 启用状态 */
     private static final int STATUS_ENABLED = 1;
+
+    /** 内置用户标志 */
     private static final int BUILTIN = 1;
+
+    /** 默认性别 */
     private static final String DEFAULT_GENDER = "UNSPECIFIED";
 
+    /** 用户数据访问 */
     private final SysUserMapper userMapper;
+
+    /** 用户角色关联数据访问 */
     private final SysUserRoleMapper userRoleMapper;
+
+    /** 角色数据访问 */
     private final SysRoleMapper roleMapper;
+
+    /** 部门数据访问 */
     private final SysDeptMapper deptMapper;
+
+    /** 密码编码器 */
     private final PasswordEncoder passwordEncoder;
+
+    /** 系统配置 */
     private final SystemProperties systemProperties;
 
     public UserServiceImpl(SysUserMapper userMapper,
@@ -189,6 +209,9 @@ public class UserServiceImpl implements UserService {
         userMapper.updateById(update);
     }
 
+    /**
+     * 根据ID获取用户，不存在则抛出异常
+     */
     private SysUser requireUser(Long id) {
         SysUser user = userMapper.selectById(id);
         if (user == null) {
@@ -197,6 +220,9 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
+    /**
+     * 校验用户名唯一性
+     */
     private void ensureUsernameUnique(String username, Long excludeId) {
         Long count = userMapper.selectCount(new LambdaQueryWrapper<SysUser>()
                 .eq(SysUser::getUsername, username)
@@ -206,6 +232,9 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    /**
+     * 用户实体转详情VO（含部门和角色信息）
+     */
     private UserVO toDetailVO(SysUser user) {
         UserVO vo = toVO(user);
         vo.setDept(toDeptVO(user.getDeptId()));
@@ -220,12 +249,18 @@ public class UserServiceImpl implements UserService {
         return vo;
     }
 
+    /**
+     * 用户实体转VO
+     */
     private UserVO toVO(SysUser user) {
         UserVO vo = new UserVO();
         BeanUtils.copyProperties(user, vo);
         return vo;
     }
 
+    /**
+     * 部门实体转VO
+     */
     private UserDeptVO toDeptVO(Long deptId) {
         if (deptId == null) {
             return null;
@@ -241,6 +276,9 @@ public class UserServiceImpl implements UserService {
         return vo;
     }
 
+    /**
+     * 角色实体转VO
+     */
     private UserRoleVO toRoleVO(SysRole role) {
         UserRoleVO vo = new UserRoleVO();
         vo.setId(role.getId());
@@ -250,6 +288,9 @@ public class UserServiceImpl implements UserService {
         return vo;
     }
 
+    /**
+     * 安全处理ID列表（去重、防空）
+     */
     private List<Long> safeIds(List<Long> ids) {
         return ids == null ? Collections.emptyList() : ids.stream().distinct().toList();
     }

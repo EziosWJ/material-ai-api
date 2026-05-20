@@ -50,6 +50,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+/**
+ * 问答会话业务实现，负责会话生命周期管理、材料关联维护、
+ * 调用 Python AI 服务完成问答，并记录 AI 调用日志。
+ */
 @Service
 public class QaSessionServiceImpl implements QaSessionService {
 
@@ -59,10 +63,13 @@ public class QaSessionServiceImpl implements QaSessionService {
     private static final String ROLE_ASSISTANT = "assistant";
     private static final String ROLE_SYSTEM = "system";
     private static final String STATUS_ACTIVE = "active";
+    /** 材料可用状态，只有可用材料才能用于问答 */
     private static final String MATERIAL_STATUS_AVAILABLE = "available";
     private static final String CALL_STATUS_SUCCESS = "success";
     private static final String CALL_STATUS_FAILED = "failed";
+    /** 未指定标题时的默认会话标题 */
     private static final String DEFAULT_TITLE = "新问答会话";
+    /** 调用日志摘要截断长度 */
     private static final int SUMMARY_LIMIT = 500;
 
     private final BizQaSessionMapper sessionMapper;
@@ -187,6 +194,9 @@ public class QaSessionServiceImpl implements QaSessionService {
         }
     }
 
+    /**
+     * 将业务提问请求转换为 Python AI 服务的请求参数。
+     */
     private PythonAiAskRequest toAskRequest(QaAskRequest request, Long userId, List<Long> materialIds) {
         PythonAiAskRequest aiRequest = new PythonAiAskRequest();
         aiRequest.setQuery(request.getQuestion());
@@ -196,6 +206,9 @@ public class QaSessionServiceImpl implements QaSessionService {
         return aiRequest;
     }
 
+    /**
+     * 插入一条问答消息记录。
+     */
     private BizQaMessage insertMessage(Long sessionId, Long userId, String role, String content,
             String sourceSegmentsJson, String modelName, Long aiCallLogId) {
         BizQaMessage message = new BizQaMessage();
@@ -210,6 +223,9 @@ public class QaSessionServiceImpl implements QaSessionService {
         return message;
     }
 
+    /**
+     * 更新会话的最后消息时间和消息计数。
+     */
     private void touchSession(BizQaSession session, int messageDelta) {
         BizQaSession update = new BizQaSession();
         update.setId(session.getId());
@@ -219,6 +235,9 @@ public class QaSessionServiceImpl implements QaSessionService {
         session.setMessageCount(update.getMessageCount());
     }
 
+    /**
+     * 创建 AI 调用日志记录。
+     */
     private BizAiCallLog createCallLog(Long userId, Long sessionId, List<Long> materialIds, String question,
             String answer, String status, Integer httpStatus, String errorCode, String errorMessage,
             Integer sourceCount, LocalDateTime startedAt, LocalDateTime finishedAt) {
@@ -241,6 +260,9 @@ public class QaSessionServiceImpl implements QaSessionService {
         return aiCallLogService.create(logRequest);
     }
 
+    /**
+     * 校验并去重材料 ID 列表，null 视为空列表，空数组则抛出异常。
+     */
     private List<Long> normalizeMaterialIds(List<Long> materialIds) {
         if (materialIds == null) {
             return List.of();
@@ -254,6 +276,9 @@ public class QaSessionServiceImpl implements QaSessionService {
         return new ArrayList<>(new LinkedHashSet<>(materialIds));
     }
 
+    /**
+     * 校验材料归属当前用户且状态为可用，返回材料 ID 到实体的映射。
+     */
     private Map<Long, BizMaterial> requireMaterials(Long userId, List<Long> materialIds) {
         if (materialIds.isEmpty()) {
             return Map.of();
@@ -272,6 +297,9 @@ public class QaSessionServiceImpl implements QaSessionService {
         return materialMap;
     }
 
+    /**
+     * 全量替换会话关联的材料：先删除旧关联，再插入新关联。
+     */
     private void replaceMaterials(Long sessionId, Long userId, List<Long> materialIds) {
         sessionMaterialMapper.delete(new LambdaQueryWrapper<BizQaSessionMaterial>()
                 .eq(BizQaSessionMaterial::getSessionId, sessionId)
@@ -285,6 +313,9 @@ public class QaSessionServiceImpl implements QaSessionService {
         }
     }
 
+    /**
+     * 查询指定会话并校验归属，不存在时抛出 NOT_FOUND 异常。
+     */
     private BizQaSession requireSession(Long id, Long userId) {
         BizQaSession session = sessionMapper.selectOne(new LambdaQueryWrapper<BizQaSession>()
                 .eq(BizQaSession::getId, id)
@@ -295,6 +326,9 @@ public class QaSessionServiceImpl implements QaSessionService {
         return session;
     }
 
+    /**
+     * 查询会话关联的材料 ID 列表。
+     */
     private List<Long> sessionMaterialIds(Long sessionId, Long userId) {
         return sessionMaterialMapper.selectList(new LambdaQueryWrapper<BizQaSessionMaterial>()
                         .eq(BizQaSessionMaterial::getSessionId, sessionId)
@@ -305,12 +339,18 @@ public class QaSessionServiceImpl implements QaSessionService {
                 .toList();
     }
 
+    /**
+     * 将会话实体转换为 VO，自动加载关联材料信息。
+     */
     private QaSessionVO toSessionVO(BizQaSession session) {
         List<Long> materialIds = sessionMaterialIds(session.getId(), session.getUserId());
         Map<Long, BizMaterial> materialMap = loadMaterialMap(materialIds);
         return toSessionVO(session, materialIds, materialMap);
     }
 
+    /**
+     * 将会话实体转换为 VO，使用已加载的材料映射。
+     */
     private QaSessionVO toSessionVO(BizQaSession session, List<Long> materialIds, Map<Long, BizMaterial> materialMap) {
         QaSessionVO vo = new QaSessionVO();
         BeanUtils.copyProperties(session, vo);
@@ -318,6 +358,9 @@ public class QaSessionServiceImpl implements QaSessionService {
         return vo;
     }
 
+    /**
+     * 将材料 ID 列表转换为材料 VO 列表。
+     */
     private List<QaMaterialVO> toMaterialVOs(Collection<Long> materialIds, Map<Long, BizMaterial> materialMap) {
         return materialIds.stream().map(materialId -> {
             QaMaterialVO vo = new QaMaterialVO();
@@ -331,6 +374,9 @@ public class QaSessionServiceImpl implements QaSessionService {
         }).toList();
     }
 
+    /**
+     * 将消息实体转换为 VO，解析来源片段 JSON。
+     */
     private QaMessageVO toMessageVO(BizQaMessage message) {
         QaMessageVO vo = new QaMessageVO();
         BeanUtils.copyProperties(message, vo);
@@ -338,6 +384,9 @@ public class QaSessionServiceImpl implements QaSessionService {
         return vo;
     }
 
+    /**
+     * 将 Python AI 返回的来源片段转换为 JSON 字符串，补充材料标题等业务信息。
+     */
     private String toSourceSegmentsJson(Long userId, List<PythonAiSourceSegment> sourceSegments) {
         if (sourceSegments == null || sourceSegments.isEmpty()) {
             return null;
@@ -366,6 +415,9 @@ public class QaSessionServiceImpl implements QaSessionService {
         }
     }
 
+    /**
+     * 从 JSON 字符串反序列化来源片段列表。
+     */
     private List<QaSourceSegmentVO> parseSourceSegments(String sourceSegmentsJson) {
         if (!StringUtils.hasText(sourceSegmentsJson)) {
             return List.of();
@@ -378,6 +430,9 @@ public class QaSessionServiceImpl implements QaSessionService {
         }
     }
 
+    /**
+     * 按材料 ID 列表批量加载材料映射（不限用户）。
+     */
     private Map<Long, BizMaterial> loadMaterialMap(List<Long> materialIds) {
         if (materialIds == null || materialIds.isEmpty()) {
             return Map.of();
@@ -388,6 +443,9 @@ public class QaSessionServiceImpl implements QaSessionService {
                 .collect(Collectors.toMap(BizMaterial::getId, Function.identity(), (left, right) -> left));
     }
 
+    /**
+     * 按用户 ID 和材料 ID 列表批量加载材料映射。
+     */
     private Map<Long, BizMaterial> loadMaterialMap(Long userId, List<Long> materialIds) {
         if (materialIds == null || materialIds.isEmpty()) {
             return Map.of();
@@ -399,10 +457,16 @@ public class QaSessionServiceImpl implements QaSessionService {
                 .collect(Collectors.toMap(BizMaterial::getId, Function.identity(), (left, right) -> left));
     }
 
+    /**
+     * 统计来源片段数量。
+     */
     private int sourceCount(List<PythonAiSourceSegment> sourceSegments) {
         return sourceSegments == null ? 0 : sourceSegments.size();
     }
 
+    /**
+     * 截断字符串到指定长度，用于调用日志摘要。
+     */
     private String truncate(String value) {
         if (!StringUtils.hasText(value) || value.length() <= SUMMARY_LIMIT) {
             return value;
@@ -410,6 +474,9 @@ public class QaSessionServiceImpl implements QaSessionService {
         return value.substring(0, SUMMARY_LIMIT);
     }
 
+    /**
+     * 获取当前登录用户 ID。
+     */
     private Long currentUserId() {
         return StpUtil.getLoginIdAsLong();
     }

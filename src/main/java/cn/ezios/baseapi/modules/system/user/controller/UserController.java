@@ -28,12 +28,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 用户管理控制器
+ * <p>提供用户的分页查询、增删改查、状态管理、角色分配、密码重置及个人信息修改接口</p>
+ */
 @Tag(name = "用户管理")
 @Validated
 @RestController
 @RequestMapping("/api/system/user")
 public class UserController {
 
+    /** 用户管理服务 */
     private final UserService userService;
 
     public UserController(UserService userService) {

@@ -21,14 +21,26 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+/**
+ * 系统配置服务实现
+ * <p>提供系统参数配置的增删改查及状态管理功能</p>
+ */
 @Service
 public class ConfigServiceImpl implements ConfigService {
 
+    /** 启用状态 */
     private static final int STATUS_ENABLED = 1;
+
+    /** 内置配置标志 */
     private static final int BUILTIN = 1;
+
+    /** 默认配置类型 */
     private static final String DEFAULT_CONFIG_TYPE = "SYSTEM";
+
+    /** 默认值类型 */
     private static final String DEFAULT_VALUE_TYPE = "TEXT";
 
+    /** 配置数据访问 */
     private final SysConfigMapper configMapper;
 
     public ConfigServiceImpl(SysConfigMapper configMapper) {
@@ -130,6 +142,9 @@ public class ConfigServiceImpl implements ConfigService {
         configMapper.updateById(config);
     }
 
+    /**
+     * 根据ID获取配置，不存在则抛出异常
+     */
     private SysConfig requireConfig(Long id) {
         SysConfig config = configMapper.selectById(id);
         if (config == null) {
@@ -138,6 +153,9 @@ public class ConfigServiceImpl implements ConfigService {
         return config;
     }
 
+    /**
+     * 校验配置键唯一性
+     */
     private void ensureConfigKeyUnique(String configKey, Long excludeId) {
         Long count = configMapper.selectCount(new LambdaQueryWrapper<SysConfig>()
                 .eq(SysConfig::getConfigKey, configKey)
@@ -147,6 +165,9 @@ public class ConfigServiceImpl implements ConfigService {
         }
     }
 
+    /**
+     * 实体转VO
+     */
     private ConfigVO toVO(SysConfig config) {
         ConfigVO vo = new ConfigVO();
         BeanUtils.copyProperties(config, vo);

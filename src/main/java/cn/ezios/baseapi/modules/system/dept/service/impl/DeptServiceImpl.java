@@ -26,14 +26,26 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+/**
+ * 部门管理服务实现
+ * <p>提供部门的树形查询、分页查询及增删改查等功能</p>
+ */
 @Service
 public class DeptServiceImpl implements DeptService {
 
+    /** 顶级部门父ID */
     private static final long ROOT_PARENT_ID = 0L;
+
+    /** 启用状态 */
     private static final int STATUS_ENABLED = 1;
+
+    /** 内置部门标志 */
     private static final int BUILTIN = 1;
 
+    /** 部门数据访问 */
     private final SysDeptMapper deptMapper;
+
+    /** 用户数据访问（用于校验部门是否关联用户） */
     private final SysUserMapper userMapper;
 
     public DeptServiceImpl(SysDeptMapper deptMapper, SysUserMapper userMapper) {
@@ -141,6 +153,9 @@ public class DeptServiceImpl implements DeptService {
         deptMapper.updateById(dept);
     }
 
+    /**
+     * 根据ID获取部门，不存在则抛出异常
+     */
     private SysDept requireDept(Long id) {
         SysDept dept = deptMapper.selectById(id);
         if (dept == null) {
@@ -149,6 +164,9 @@ public class DeptServiceImpl implements DeptService {
         return dept;
     }
 
+    /**
+     * 校验部门编码唯一性
+     */
     private void ensureDeptCodeUnique(String deptCode, Long excludeId) {
         Long count = deptMapper.selectCount(new LambdaQueryWrapper<SysDept>()
                 .eq(SysDept::getDeptCode, deptCode)
@@ -158,6 +176,9 @@ public class DeptServiceImpl implements DeptService {
         }
     }
 
+    /**
+     * 构建部门树形结构
+     */
     private List<DeptVO> buildTree(List<DeptVO> depts) {
         Map<Long, DeptVO> deptMap = new LinkedHashMap<>();
         for (DeptVO dept : depts) {
@@ -176,6 +197,9 @@ public class DeptServiceImpl implements DeptService {
         return roots;
     }
 
+    /**
+     * 递归排序部门树
+     */
     private void sortTree(List<DeptVO> depts) {
         depts.sort(Comparator.comparing(DeptVO::getSortOrder, Comparator.nullsLast(Integer::compareTo))
                 .thenComparing(DeptVO::getId, Comparator.nullsLast(Long::compareTo)));
@@ -184,6 +208,9 @@ public class DeptServiceImpl implements DeptService {
         }
     }
 
+    /**
+     * 实体转VO
+     */
     private DeptVO toVO(SysDept dept) {
         DeptVO vo = new DeptVO();
         BeanUtils.copyProperties(dept, vo);

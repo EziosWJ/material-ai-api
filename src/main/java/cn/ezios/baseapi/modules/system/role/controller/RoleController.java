@@ -25,12 +25,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 角色管理控制器
+ * <p>提供角色的分页查询、增删改查、状态管理及菜单分配接口</p>
+ */
 @Tag(name = "角色管理")
 @Validated
 @RestController
 @RequestMapping("/api/system/role")
 public class RoleController {
 
+    /** 角色管理服务 */
     private final RoleService roleService;
 
     public RoleController(RoleService roleService) {

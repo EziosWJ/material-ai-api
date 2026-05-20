@@ -23,6 +23,10 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * 操作日志切面。
+ * <p>拦截标注了 {@link OperLog} 注解的方法，记录请求参数、响应结果、耗时、操作人等信息到操作日志表。</p>
+ */
 @Aspect
 @Component
 public class OperLogAspect {
@@ -30,6 +34,7 @@ public class OperLogAspect {
     private static final Logger logger = LoggerFactory.getLogger(OperLogAspect.class);
     private static final String SUCCESS = "SUCCESS";
     private static final String FAIL = "FAIL";
+    /** 日志文本最大截取长度，防止超长字段写入数据库 */
     private static final int MAX_TEXT_LENGTH = 2000;
 
     private final SysOperLogMapper operLogMapper;
@@ -42,6 +47,13 @@ public class OperLogAspect {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * 环绕通知：执行目标方法并记录操作日志。
+     *
+     * @param joinPoint 连接点
+     * @return 方法执行结果
+     * @throws Throwable 方法执行过程中抛出的异常
+     */
     @Around("@annotation(cn.ezios.baseapi.framework.log.OperLog)")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.currentTimeMillis();
@@ -58,6 +70,9 @@ public class OperLogAspect {
         }
     }
 
+    /**
+     * 构建并持久化操作日志记录。
+     */
     private void record(ProceedingJoinPoint joinPoint, Object result, Throwable error, long costTime) {
         try {
             OperLog operLog = ((MethodSignature) joinPoint.getSignature()).getMethod().getAnnotation(OperLog.class);
@@ -81,6 +96,9 @@ public class OperLogAspect {
         }
     }
 
+    /**
+     * 填充操作人信息（用户 ID 和用户名）。
+     */
     private void fillOperator(SysOperLog log) {
         try {
             if (StpUtil.isLogin()) {
@@ -96,6 +114,9 @@ public class OperLogAspect {
         }
     }
 
+    /**
+     * 过滤掉不适合序列化记录的参数（HttpServletRequest、MultipartFile）。
+     */
     private Object[] filterArgs(Object[] args) {
         return Arrays.stream(args)
                 .filter(arg -> !(arg instanceof HttpServletRequest))
@@ -104,6 +125,9 @@ public class OperLogAspect {
                 .toArray();
     }
 
+    /**
+     * 将对象序列化为 JSON 字符串，序列化失败时回退为 toString。
+     */
     private String toJson(Object value) {
         if (value == null) {
             return null;
@@ -115,6 +139,9 @@ public class OperLogAspect {
         }
     }
 
+    /**
+     * 对敏感字段（密码、token 等）进行脱敏处理。
+     */
     private String mask(String value) {
         if (!StringUtils.hasText(value)) {
             return value;
@@ -122,6 +149,9 @@ public class OperLogAspect {
         return value.replaceAll("(?i)(\"(?:password|oldPassword|newPassword|token|authorization)\"\\s*:\\s*\")[^\"]*(\")", "$1******$2");
     }
 
+    /**
+     * 截取超长文本，防止写入数据库时溢出。
+     */
     private String truncate(String value) {
         if (value == null || value.length() <= MAX_TEXT_LENGTH) {
             return value;
@@ -129,6 +159,9 @@ public class OperLogAspect {
         return value.substring(0, MAX_TEXT_LENGTH);
     }
 
+    /**
+     * 获取当前请求的 HttpServletRequest，非 Web 环境返回 null。
+     */
     private HttpServletRequest currentRequest() {
         if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attributes) {
             return attributes.getRequest();

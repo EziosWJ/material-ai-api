@@ -11,11 +11,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 字典项查询控制器
+ * <p>提供按字典编码查询字典项列表的接口，供前端下拉选择使用</p>
+ */
 @Tag(name = "字典项")
 @RestController
 @RequestMapping("/api/system/dict")
 public class DictItemController {
 
+    /** 字典服务 */
     private final DictService dictService;
 
     public DictItemController(DictService dictService) {

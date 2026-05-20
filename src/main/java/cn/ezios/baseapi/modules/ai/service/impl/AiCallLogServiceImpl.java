@@ -10,6 +10,10 @@ import java.util.Objects;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+/**
+ * AI 调用日志服务实现。
+ * <p>将调用请求 DTO 转换为实体并持久化，材料 ID 列表以 JSON 字符串形式存储。</p>
+ */
 @Service
 public class AiCallLogServiceImpl implements AiCallLogService {
 

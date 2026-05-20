@@ -23,6 +23,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 材料管理 REST 控制器
+ * <p>提供材料的增删改查、材料处理、向量删除等 HTTP 接口</p>
+ */
 @Tag(name = "材料管理")
 @Validated
 @RestController

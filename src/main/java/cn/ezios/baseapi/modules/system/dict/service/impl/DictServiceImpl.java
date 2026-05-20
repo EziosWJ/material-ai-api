@@ -26,13 +26,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+/**
+ * 字典管理服务实现
+ * <p>提供字典类型和字典数据的增删改查功能</p>
+ */
 @Service
 public class DictServiceImpl implements DictService {
 
+    /** 启用状态 */
     private static final int STATUS_ENABLED = 1;
+
+    /** 内置字典标志 */
     private static final int BUILTIN = 1;
 
+    /** 字典类型数据访问 */
     private final SysDictTypeMapper dictTypeMapper;
+
+    /** 字典数据访问 */
     private final SysDictDataMapper dictDataMapper;
 
     public DictServiceImpl(SysDictTypeMapper dictTypeMapper, SysDictDataMapper dictDataMapper) {
@@ -197,6 +207,9 @@ public class DictServiceImpl implements DictService {
                 .toList();
     }
 
+    /**
+     * 根据ID获取字典类型，不存在则抛出异常
+     */
     private SysDictType requireType(Long id) {
         SysDictType type = dictTypeMapper.selectById(id);
         if (type == null) {
@@ -205,6 +218,9 @@ public class DictServiceImpl implements DictService {
         return type;
     }
 
+    /**
+     * 根据ID获取字典数据，不存在则抛出异常
+     */
     private SysDictData requireData(Long id) {
         SysDictData data = dictDataMapper.selectById(id);
         if (data == null) {
@@ -213,6 +229,9 @@ public class DictServiceImpl implements DictService {
         return data;
     }
 
+    /**
+     * 校验字典编码唯一性
+     */
     private void ensureDictCodeUnique(String dictCode, Long excludeId) {
         Long count = dictTypeMapper.selectCount(new LambdaQueryWrapper<SysDictType>()
                 .eq(SysDictType::getDictCode, dictCode)
@@ -222,6 +241,9 @@ public class DictServiceImpl implements DictService {
         }
     }
 
+    /**
+     * 校验字典值在同一类型下的唯一性
+     */
     private void ensureDictValueUnique(Long dictTypeId, String dictValue, Long excludeId) {
         Long count = dictDataMapper.selectCount(new LambdaQueryWrapper<SysDictData>()
                 .eq(SysDictData::getDictTypeId, dictTypeId)
@@ -232,12 +254,18 @@ public class DictServiceImpl implements DictService {
         }
     }
 
+    /**
+     * 字典类型实体转VO
+     */
     private DictTypeVO toTypeVO(SysDictType type) {
         DictTypeVO vo = new DictTypeVO();
         BeanUtils.copyProperties(type, vo);
         return vo;
     }
 
+    /**
+     * 字典数据实体转VO（含字典编码）
+     */
     private DictDataVO toDataVO(SysDictData data) {
         DictDataVO vo = new DictDataVO();
         BeanUtils.copyProperties(data, vo);
